@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/BlogPosting" >
+  <link rel="stylesheet" type="text/css" href="/assets/css/screen.css">
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Source+Code+Pro">
+  <link rel="stylesheet" type="text/css" href="/assets/css/custom.css" />
+  <link rel="stylesheet" type="text/css" href="/assets/css/grid.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/jupyter.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/notebook.css">
+  <body>
+    <section class="post">
+
+    <article role="article" id="post" class="post-content" itemprop="articleBody">
+    <p>Building A Recommendation System for Movies.</p>
+
+<!--end-->
+
+<h1 id="recommendation-system-imdb">Recommendation System: IMDB</h1>
+
+<p><strong>Building A Recommendation System for Movies.</strong></p>
+
+<p>A Recommendation System is a subclass of information filtering system that seeks to predict the “rating” or “preference” a user would give to an item. Many companies apply recommendation systems in one form or another; Amazon uses it to suggest products to customers, YouTube uses it to decide which video to play next, and Facebook uses it to recommend pages to like and people to follow.</p>
+
+<p>Recommendation Systems can be classified into 3 types:</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Simple Recommendation</code>: offer generalized recommendations to every user, based on movie popularity and/or genre. The basic idea behind this system is that movies that are more popular and critically acclaimed will have a higher probability of being liked by the average audience. IMDB Top 250 is an example of this system.</li>
+  <li><code class="highlighter-rouge">Content-based Recommendation</code>: suggest similar items based on a particular item. This system uses item metadata, such as genre, director, description, actors, etc. for movies, to make these recommendations. The general idea behind these recommendation systems is that if a person liked a particular item, he or she will also like an item that is similar to it.</li>
+  <li><code class="highlighter-rouge">Collaborative Filtering Engines</code>: these systems try to predict the rating or preference that a user would give an item-based on past ratings and preferences of other users. Collaborative filters do not require item metadata like its content-based counterparts.</li>
+</ol>
+
+<h1 id="1-simple-recommendation-system">1. Simple Recommendation System</h1>
+
+<p><strong>A simplified clone of IMDB Top 250 Movies using metadata collected from IMDB.</strong></p>
+
+<p>Below are the steps we will take to build our Simple Recommendation System:</p>
+<ol>
+  <li>Decide on the metric or score to rate movies on</li>
+  <li>Calculate the score for every movie</li>
+  <li>Sort the movies based on the score and output the top results</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Import Pandas</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="c"># Load Movies Metadata</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'movies_metadata.csv'</span><span class="p">,</span> <span class="n">low_memory</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="c"># Print the first three rows</span>
+<span class="n">metadata</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>adult</th>
+      <th>belongs_to_collection</th>
+      <th>budget</th>
+      <th>genres</th>
+      <th>homepage</th>
+      <th>id</th>
+      <th>imdb_id</th>
+      <th>original_language</th>
+      <th>original_title</th>
+      <th>overview</th>
+      <th>...</th>
+      <th>release_date</th>
+      <th>revenue</th>
+      <th>runtime</th>
+      <th>spoken_languages</th>
+      <th>status</th>
+      <th>tagline</th>
+      <th>title</th>
+      <th>video</th>
+      <th>vote_average</th>
+      <th>vote_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>False</td>
+      <td>{'id': 10194, 'name': 'Toy Story Collection', ...</td>
+      <td>30000000</td>
+      <td>[{'id': 16, 'name': 'Animation'}, {'id': 35, '...</td>
+      <td>http://toystory.disney.com/toy-story</td>
+      <td>862</td>
+      <td>tt0114709</td>
+      <td>en</td>
+      <td>Toy Story</td>
+      <td>Led by Woody, Andy's toys live happily in his ...</td>
+      <td>...</td>
+      <td>1995-10-30</td>
+      <td>373554033.0</td>
+      <td>81.0</td>
+      <td>[{'iso_639_1': 'en', 'name': 'English'}]</td>
+      <td>Released</td>
+      <td>NaN</td>
+      <td>Toy Story</td>
+      <td>False</td>
+      <td>7.7</td>
+      <td>5415.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>False</td>
+      <td>NaN</td>
+      <td>65000000</td>
+      <td>[{'id': 12, 'name': 'Adventure'}, {'id': 14, '...</td>
+      <td>NaN</td>
+      <td>8844</td>
+      <td>tt0113497</td>
+      <td>en</td>
+      <td>Jumanji</td>
+      <td>When siblings Judy and Peter discover an encha...</td>
+      <td>...</td>
+      <td>1995-12-15</td>
+      <td>262797249.0</td>
+      <td>104.0</td>
+      <td>[{'iso_639_1': 'en', 'name': 'English'}, {'iso...</td>
+      <td>Released</td>
+      <td>Roll the dice and unleash the excitement!</td>
+      <td>Jumanji</td>
+      <td>False</td>
+      <td>6.9</td>
+      <td>2413.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>False</td>
+      <td>{'id': 119050, 'name': 'Grumpy Old Men Collect...</td>
+      <td>0</td>
+      <td>[{'id': 10749, 'name': 'Romance'}, {'id': 35, ...</td>
+      <td>NaN</td>
+      <td>15602</td>
+      <td>tt0113228</td>
+      <td>en</td>
+      <td>Grumpier Old Men</td>
+      <td>A family wedding reignites the ancient feud be...</td>
+      <td>...</td>
+      <td>1995-12-22</td>
+      <td>0.0</td>
+      <td>101.0</td>
+      <td>[{'iso_639_1': 'en', 'name': 'English'}]</td>
+      <td>Released</td>
+      <td>Still Yelling. Still Fighting. Still Ready for...</td>
+      <td>Grumpier Old Men</td>
+      <td>False</td>
+      <td>6.5</td>
+      <td>92.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>3 rows × 24 columns</p>
+</div>
+
+<p>One of the most basic metrics you can think of is the rating. However, using this metric has a few caveats. For one, it does not take into consideration the popularity of a movie. Therefore, a movie with a rating of 9 from 10 voters will be considered ‘better’ than a movie with a rating of 8.9 from 10,000 voters.</p>
+
+<p>On a related note, this metric will also tend to favor movies with smaller number of voters with skewed and/or extremely high ratings. As the number of voters increase, the rating of a movie regularizes and approaches towards a value that is reflective of the movie’s quality. It is more difficult to discern the quality of a movie with extremely few voters.</p>
+
+<p>Taking these shortcomings into consideration, it is necessary that we come up with a weighted rating that takes into account the average rating and the number of votes it has garnered. Such a system will make sure that a movie with a 9 rating from 100,000 voters gets a (fair) higher score than a movie with the same rating but fewer voters.</p>
+
+<p>Since we are trying to build a clone of IMDB’s Top 250, we will use its weighted rating formula as our metric/score. Mathematically, it is represented as follows:</p>
+
+<p><img src="/assets/media/recommendation-system/weighted_rating.png" alt="WEIGHTED-RATING" /></p>
+
+<p>where,</p>
+<ul>
+  <li><em>v</em> is the number of votes for the movie</li>
+  <li><em>m</em> is the minimum votes required to be listed in the chart</li>
+  <li><em>R</em> is the average rating of the movie</li>
+  <li><em>C</em> is the mean vote across the whole report</li>
+</ul>
+
+<p>We already have the values to <strong><em>v</em></strong> (<code class="highlighter-rouge">vote_count</code>) and <strong><em>R</em></strong> (<code class="highlighter-rouge">vote_average</code>) for each movie in the dataset. It is also possible to directly calculate <strong><em>C</em></strong> from this data.</p>
+
+<p>What we need to determine is an appropriate value for <strong><em>m</em></strong>, the minimum votes required to be listed in the chart. There is no right value for <strong><em>m</em></strong>. We can view it as a preliminary negative filter that ignores movies which have less than a certain number of votes. The selectivity of our filter is up to your discretion.</p>
+
+<p>In this case, we will use the 90th percentile as our cutoff. In other words, for a movie to feature in the charts, it must have more votes than at least 90% of the movies in the list. (If we chose the 75th percentile as our cutoff, we would have considered the top 25% of the movies in terms of the number of votes garnered. As the percentile decreases, the number of movies considered increases).</p>
+
+<p>As a first step, let’s calculate the value of <strong><em>C</em></strong>, the mean rating across all movies:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Calculate C</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s">'vote_average'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>5.618207215133889
+</code></pre>
+</div>
+
+<p>The average rating of a movie on IMDB is around 5.6, on a scale of 10.</p>
+
+<p>Next, let’s calculate the number of votes, <strong><em>m</em></strong>, received by a movie in the 90th percentile. We will use the <code class="highlighter-rouge">.quantile()</code> method from the Pandas library:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Calculate the minimum number of votes required to be in the chart, m</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s">'vote_count'</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.90</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>160.0
+</code></pre>
+</div>
+
+<p>Next, we can filter the movies that qualify for the chart, based on their vote counts:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Filter out all qualified movies into a new DataFrame</span>
+<span class="n">q_movies</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="s">'vote_count'</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">]</span>
+<span class="n">q_movies</span><span class="o">.</span><span class="n">shape</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(4555, 24)
+</code></pre>
+</div>
+
+<p>We use the <code class="highlighter-rouge">.copy()</code> method to ensure that the new <code class="highlighter-rouge">q_movies</code> DataFrame created is independent of our original metadata DataFrame. In other words, any changes made to the <code class="highlighter-rouge">q_movies</code> DataFrame does not affect the metadata.</p>
+
+<p>There are 4555 movies which qualify to be in this list. Now, we need to calculate our metric for each qualified movie. To do this, we will define a function, <code class="highlighter-rouge">weighted_rating()</code> and define a new feature <code class="highlighter-rouge">score</code>, of which we’ll calculate the value by applying this function to our DataFrame of qualified movies:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Function that computes the weighted rating of each movie</span>
+<span class="k">def</span> <span class="nf">weighted_rating</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="n">m</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s">'vote_count'</span><span class="p">]</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s">'vote_average'</span><span class="p">]</span>
+    <span class="c"># Calculation based on the IMDB formula</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">v</span><span class="o">/</span><span class="p">(</span><span class="n">v</span><span class="o">+</span><span class="n">m</span><span class="p">)</span> <span class="o">*</span> <span class="n">R</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">m</span><span class="o">/</span><span class="p">(</span><span class="n">m</span><span class="o">+</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Define a new feature 'score' and calculate its value with `weighted_rating()`</span>
+<span class="n">q_movies</span><span class="p">[</span><span class="s">'score'</span><span class="p">]</span> <span class="o">=</span> <span class="n">q_movies</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">weighted_rating</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Finally, let’s sort the DataFrame based on the <code class="highlighter-rouge">score</code> feature and output the title, vote count, vote average and weighted rating or score of the top 15 movies.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">#Sort movies based on score calculated above</span>
+<span class="n">q_movies</span> <span class="o">=</span> <span class="n">q_movies</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s">'score'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="c">#Print the top 15 movies</span>
+<span class="n">q_movies</span><span class="p">[[</span><span class="s">'title'</span><span class="p">,</span> <span class="s">'vote_count'</span><span class="p">,</span> <span class="s">'vote_average'</span><span class="p">,</span> <span class="s">'score'</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>title</th>
+      <th>vote_count</th>
+      <th>vote_average</th>
+      <th>score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>314</th>
+      <td>The Shawshank Redemption</td>
+      <td>8358.0</td>
+      <td>8.5</td>
+      <td>8.445869</td>
+    </tr>
+    <tr>
+      <th>834</th>
+      <td>The Godfather</td>
+      <td>6024.0</td>
+      <td>8.5</td>
+      <td>8.425439</td>
+    </tr>
+    <tr>
+      <th>10309</th>
+      <td>Dilwale Dulhania Le Jayenge</td>
+      <td>661.0</td>
+      <td>9.1</td>
+      <td>8.421453</td>
+    </tr>
+    <tr>
+      <th>12481</th>
+      <td>The Dark Knight</td>
+      <td>12269.0</td>
+      <td>8.3</td>
+      <td>8.265477</td>
+    </tr>
+    <tr>
+      <th>2843</th>
+      <td>Fight Club</td>
+      <td>9678.0</td>
+      <td>8.3</td>
+      <td>8.256385</td>
+    </tr>
+    <tr>
+      <th>292</th>
+      <td>Pulp Fiction</td>
+      <td>8670.0</td>
+      <td>8.3</td>
+      <td>8.251406</td>
+    </tr>
+    <tr>
+      <th>522</th>
+      <td>Schindler's List</td>
+      <td>4436.0</td>
+      <td>8.3</td>
+      <td>8.206639</td>
+    </tr>
+    <tr>
+      <th>23673</th>
+      <td>Whiplash</td>
+      <td>4376.0</td>
+      <td>8.3</td>
+      <td>8.205404</td>
+    </tr>
+    <tr>
+      <th>5481</th>
+      <td>Spirited Away</td>
+      <td>3968.0</td>
+      <td>8.3</td>
+      <td>8.196055</td>
+    </tr>
+    <tr>
+      <th>2211</th>
+      <td>Life Is Beautiful</td>
+      <td>3643.0</td>
+      <td>8.3</td>
+      <td>8.187171</td>
+    </tr>
+    <tr>
+      <th>1178</th>
+      <td>The Godfather: Part II</td>
+      <td>3418.0</td>
+      <td>8.3</td>
+      <td>8.180076</td>
+    </tr>
+    <tr>
+      <th>1152</th>
+      <td>One Flew Over the Cuckoo's Nest</td>
+      <td>3001.0</td>
+      <td>8.3</td>
+      <td>8.164256</td>
+    </tr>
+    <tr>
+      <th>351</th>
+      <td>Forrest Gump</td>
+      <td>8147.0</td>
+      <td>8.2</td>
+      <td>8.150272</td>
+    </tr>
+    <tr>
+      <th>1154</th>
+      <td>The Empire Strikes Back</td>
+      <td>5998.0</td>
+      <td>8.2</td>
+      <td>8.132919</td>
+    </tr>
+    <tr>
+      <th>1176</th>
+      <td>Psycho</td>
+      <td>2405.0</td>
+      <td>8.3</td>
+      <td>8.132715</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>We see that our chart has a lot of movies in common with the IMDB Top 250 chart: for example, our top two movies, “Shawshank Redemption” and “The Godfather”, are the same as IMDB.</p>
+
+<p><img src="/assets/media/recommendation-system/top_250.png" alt="TOP-250" /></p>
+
+<h1 id="2-content-based-recommender-in-python">2. Content-Based Recommender in Python</h1>
+<p><strong>Creating a ‘Plot Description’ Based Recommendation System.</strong></p>
+
+<p>In this section, we will build a system that recommends movies that are similar to a particular movie. More specifically, we will compute pairwise similarity scores for all movies based on their plot descriptions and recommend movies based on that similarity score.</p>
+
+<p>The plot description is available to us as the <code class="highlighter-rouge">overview</code> feature in our <code class="highlighter-rouge">metadata</code> dataset. Let’s explore the plots of the first five movies:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">#Print plot overviews of the first 5 movies.</span>
+<span class="n">metadata</span><span class="p">[</span><span class="s">'overview'</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>0    Led by Woody, Andy's toys live happily in his ...
+1    When siblings Judy and Peter discover an encha...
+2    A family wedding reignites the ancient feud be...
+3    Cheated on, mistreated and stepped on, the wom...
+4    Just when George Banks has recovered from his ...
+Name: overview, dtype: object
+</code></pre>
+</div>
+
+<p>In its current form, it is not possible to compute the similarity between any two overviews. In order to achieve our goal, we will have to compute the Term Frequency-Inverse Document Frequency (TF-IDF) vectors for each overview. This will give us a matrix where each column represents a word in the overview vocabulary and each column represents a movie.</p>
+
+<p>In its essence, the TF-IDF score is the frequency of a word occurring in a document, down-weighted by the number of documents in which it occurs. This is done to reduce the importance of words that occur frequently in plot overviews and therefore, their significance in computing the final similarity score.</p>
+
+<p>Fortunately, scikit-learn gives us a built-in <code class="highlighter-rouge">TfIdfVectorizer</code> class that produces the TF-IDF matrix in a couple of lines of code.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">#Import TfIdfVectorizer from scikit-learn</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">TfidfVectorizer</span>
+
+<span class="c">#Define a TF-IDF Vectorizer Object. Remove all english stop words such as 'the', 'a'</span>
+<span class="n">tfidf</span> <span class="o">=</span> <span class="n">TfidfVectorizer</span><span class="p">(</span><span class="n">stop_words</span><span class="o">=</span><span class="s">'english'</span><span class="p">)</span>
+
+<span class="c">#Replace NaN with an empty string</span>
+<span class="n">metadata</span><span class="p">[</span><span class="s">'overview'</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s">'overview'</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s">''</span><span class="p">)</span>
+
+<span class="c">#Construct the required TF-IDF matrix by fitting and transforming the data</span>
+<span class="n">tfidf_matrix</span> <span class="o">=</span> <span class="n">tfidf</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s">'overview'</span><span class="p">])</span>
+
+<span class="c">#Output the shape of tfidf_matrix</span>
+<span class="n">tfidf_matrix</span><span class="o">.</span><span class="n">shape</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>(45466, 75827)
+</code></pre>
+</div>
+
+<p>We see that over 75,000 different words were used to describe the 45,000 movies in our dataset.</p>
+
+<p>With this matrix in hand, we can now compute a similarity score. There are several candidates for this; such as the euclidean, the Pearson and the cosine similarity scores. Again, there is no right answer to which score is the best. Different scores work well in different scenarios and it is often a good idea to experiment with different metrics.</p>
+
+<p>We will be using the cosine similarity to calculate a numeric quantity that denotes the similarity between two movies. We use the cosine similarity score since it is independent of magnitude and is relatively easy and fast to calculate (especially when used in conjunction with TF-IDF scores, which will be explained later). Mathematically, it is defined as follows:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>$cosine(x,y) = \frac{x. y^\intercal}{</td>
+      <td> </td>
+      <td>x</td>
+      <td> </td>
+      <td>.</td>
+      <td> </td>
+      <td>y</td>
+      <td> </td>
+      <td>} $</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Since we have used the TF-IDF vectorizer, calculating the dot product will directly give us the cosine similarity score. Therefore, we will use <code class="highlighter-rouge">sklearn</code>’s <code class="highlighter-rouge">linear_kernel()</code> instead of <code class="highlighter-rouge">cosine_similarities()</code> since it is faster.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Import linear_kernel</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">linear_kernel</span>
+
+<span class="c"># Compute the cosine similarity matrix</span>
+<span class="n">cosine_sim</span> <span class="o">=</span> <span class="n">linear_kernel</span><span class="p">(</span><span class="n">tfidf_matrix</span><span class="p">,</span> <span class="n">tfidf_matrix</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>We’re going to define a function that takes in a movie title as an input and outputs a list of the 10 most similar movies. Firstly, for this, we need a reverse mapping of movie titles and DataFrame indices. In other words, we need a mechanism to identify the index of a movie in your <code class="highlighter-rouge">metadata</code> DataFrame, given its title.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c">#Construct a reverse map of indices and movie titles</span>
+<span class="n">indices</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s">'title'</span><span class="p">])</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<p>We are now in a good position to define our recommendation function. These are the following steps we will follow:</p>
+
+<ol>
+  <li>Get the index of the movie given its title.</li>
+  <li>Get the list of cosine similarity scores for that particular movie with all movies. Convert it into a list of tuples where the first element is its position and the second is the similarity score.</li>
+  <li>Sort the aforementioned list of tuples based on the similarity scores; that is, the second element.</li>
+  <li>Get the top 10 elements of this list. Ignore the first element as it refers to itself.</li>
+  <li>Return the titles corresponding to the indices of the top elements.</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Function that takes in movie title as input and outputs most similar movies</span>
+<span class="k">def</span> <span class="nf">get_recommendations</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">cosine_sim</span><span class="o">=</span><span class="n">cosine_sim</span><span class="p">):</span>
+    <span class="c"># Get the index of the movie that matches the title</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">title</span><span class="p">]</span>
+
+    <span class="c"># Get the pairwsie similarity scores of all movies with that movie</span>
+    <span class="n">sim_scores</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">cosine_sim</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+
+    <span class="c"># Sort the movies based on the similarity scores</span>
+    <span class="n">sim_scores</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sim_scores</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># Get the scores of the 10 most similar movies</span>
+    <span class="n">sim_scores</span> <span class="o">=</span> <span class="n">sim_scores</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">11</span><span class="p">]</span>
+
+    <span class="c"># Get the movie indices</span>
+    <span class="n">movie_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sim_scores</span><span class="p">]</span>
+
+    <span class="c"># Return the top 10 most similar movies</span>
+    <span class="k">return</span> <span class="n">metadata</span><span class="p">[</span><span class="s">'title'</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">movie_indices</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">get_recommendations</span><span class="p">(</span><span class="s">'The Dark Knight Rises'</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>12481                                      The Dark Knight
+150                                         Batman Forever
+1328                                        Batman Returns
+15511                           Batman: Under the Red Hood
+585                                                 Batman
+21194    Batman Unmasked: The Psychology of the Dark Kn...
+9230                    Batman Beyond: Return of the Joker
+18035                                     Batman: Year One
+19792              Batman: The Dark Knight Returns, Part 1
+3095                          Batman: Mask of the Phantasm
+Name: title, dtype: object
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">get_recommendations</span><span class="p">(</span><span class="s">'The Godfather'</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>1178               The Godfather: Part II
+44030    The Godfather Trilogy: 1972-1990
+1914              The Godfather: Part III
+23126                          Blood Ties
+11297                    Household Saints
+34717                   Start Liquidation
+10821                            Election
+38030            A Mother Should Be Loved
+17729                   Short Sharp Shock
+26293                  Beck 28 - Familjen
+Name: title, dtype: object
+</code></pre>
+</div>
+
+<p>While our system has done a good job of finding movies with similar plot descriptions, the quality of recommendations could be improved by considering other features of a movie.</p>
+
+<h1 id="21-credits-genres-and-keywords-based-recommendations">2.1 Credits, Genres and Keywords Based Recommendations</h1>
+<p>With the usage of more features, we are going to build a recommendation system based on the following metadata:</p>
+
+<ul>
+  <li>The 3 Top Actors</li>
+  <li>The director</li>
+  <li>Related Genres</li>
+  <li>Movie Plot Keywords</li>
+</ul>
+
+<p>Lets start by loading and merging our new datasets:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Load keywords and credits</span>
+<span class="n">credits</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'credits.csv'</span><span class="p">)</span>
+<span class="n">keywords</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'keywords.csv'</span><span class="p">)</span>
+
+<span class="c"># Remove rows with bad IDs.</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="mi">19730</span><span class="p">,</span> <span class="mi">29503</span><span class="p">,</span> <span class="mi">35587</span><span class="p">])</span>
+
+<span class="c"># Convert IDs to int. Required for merging</span>
+<span class="n">keywords</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">'int'</span><span class="p">)</span>
+<span class="n">credits</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span> <span class="o">=</span> <span class="n">credits</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">'int'</span><span class="p">)</span>
+<span class="n">metadata</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">'int'</span><span class="p">)</span>
+
+<span class="c"># Merge keywords and credits into your main metadata dataframe</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">credits</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s">'id'</span><span class="p">)</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">keywords</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s">'id'</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Print the first two movies of your newly merged metadata</span>
+<span class="n">metadata</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>adult</th>
+      <th>belongs_to_collection</th>
+      <th>budget</th>
+      <th>genres</th>
+      <th>homepage</th>
+      <th>id</th>
+      <th>imdb_id</th>
+      <th>original_language</th>
+      <th>original_title</th>
+      <th>overview</th>
+      <th>...</th>
+      <th>spoken_languages</th>
+      <th>status</th>
+      <th>tagline</th>
+      <th>title</th>
+      <th>video</th>
+      <th>vote_average</th>
+      <th>vote_count</th>
+      <th>cast</th>
+      <th>crew</th>
+      <th>keywords</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>False</td>
+      <td>{'id': 10194, 'name': 'Toy Story Collection', ...</td>
+      <td>30000000</td>
+      <td>[{'id': 16, 'name': 'Animation'}, {'id': 35, '...</td>
+      <td>http://toystory.disney.com/toy-story</td>
+      <td>862</td>
+      <td>tt0114709</td>
+      <td>en</td>
+      <td>Toy Story</td>
+      <td>Led by Woody, Andy's toys live happily in his ...</td>
+      <td>...</td>
+      <td>[{'iso_639_1': 'en', 'name': 'English'}]</td>
+      <td>Released</td>
+      <td>NaN</td>
+      <td>Toy Story</td>
+      <td>False</td>
+      <td>7.7</td>
+      <td>5415.0</td>
+      <td>[{'cast_id': 14, 'character': 'Woody (voice)',...</td>
+      <td>[{'credit_id': '52fe4284c3a36847f8024f49', 'de...</td>
+      <td>[{'id': 931, 'name': 'jealousy'}, {'id': 4290,...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>False</td>
+      <td>NaN</td>
+      <td>65000000</td>
+      <td>[{'id': 12, 'name': 'Adventure'}, {'id': 14, '...</td>
+      <td>NaN</td>
+      <td>8844</td>
+      <td>tt0113497</td>
+      <td>en</td>
+      <td>Jumanji</td>
+      <td>When siblings Judy and Peter discover an encha...</td>
+      <td>...</td>
+      <td>[{'iso_639_1': 'en', 'name': 'English'}, {'iso...</td>
+      <td>Released</td>
+      <td>Roll the dice and unleash the excitement!</td>
+      <td>Jumanji</td>
+      <td>False</td>
+      <td>6.9</td>
+      <td>2413.0</td>
+      <td>[{'cast_id': 1, 'character': 'Alan Parrish', '...</td>
+      <td>[{'credit_id': '52fe44bfc3a36847f80a7cd1', 'de...</td>
+      <td>[{'id': 10090, 'name': 'board game'}, {'id': 1...</td>
+    </tr>
+  </tbody>
+</table>
+<p>2 rows × 27 columns</p>
+</div>
+
+<p>From our new dataset, we will need to extract the three top actors, the director and the keywords associated with each movie. Right now, our data is present in the form of “stringified” lists, we will need to convert them into a form that we can use with our code:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Parse the stringified features into their corresponding python objects</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">literal_eval</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'cast'</span><span class="p">,</span> <span class="s">'crew'</span><span class="p">,</span> <span class="s">'keywords'</span><span class="p">,</span> <span class="s">'genres'</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">literal_eval</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>Next, we will write functions that will extract the required information from each feature.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Get the director's name from the crew feature. If director is not listed, return NaN</span>
+<span class="k">def</span> <span class="nf">get_director</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="s">'job'</span><span class="p">]</span> <span class="o">==</span> <span class="s">'Director'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">i</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Returns the list top 3 elements or entire list; whichever is more.</span>
+<span class="k">def</span> <span class="nf">get_list</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="s">'name'</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+        <span class="c">#Check if more than 3 elements exist. If yes, return only first three. If no, return entire list.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">names</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">names</span>
+
+    <span class="c">#Return empty list in case of missing/malformed data</span>
+    <span class="k">return</span> <span class="p">[]</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Define new director, cast, genres and keywords features that are in a suitable form.</span>
+<span class="n">metadata</span><span class="p">[</span><span class="s">'director'</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s">'crew'</span><span class="p">]</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">get_director</span><span class="p">)</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'cast'</span><span class="p">,</span> <span class="s">'keywords'</span><span class="p">,</span> <span class="s">'genres'</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">get_list</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Print the new features of the first 3 films</span>
+<span class="n">metadata</span><span class="p">[[</span><span class="s">'title'</span><span class="p">,</span> <span class="s">'cast'</span><span class="p">,</span> <span class="s">'director'</span><span class="p">,</span> <span class="s">'keywords'</span><span class="p">,</span> <span class="s">'genres'</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>title</th>
+      <th>cast</th>
+      <th>director</th>
+      <th>keywords</th>
+      <th>genres</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Toy Story</td>
+      <td>[Tom Hanks, Tim Allen, Don Rickles]</td>
+      <td>John Lasseter</td>
+      <td>[jealousy, toy, boy]</td>
+      <td>[Animation, Comedy, Family]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Jumanji</td>
+      <td>[Robin Williams, Jonathan Hyde, Kirsten Dunst]</td>
+      <td>Joe Johnston</td>
+      <td>[board game, disappearance, based on children'...</td>
+      <td>[Adventure, Fantasy, Family]</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Grumpier Old Men</td>
+      <td>[Walter Matthau, Jack Lemmon, Ann-Margret]</td>
+      <td>Howard Deutch</td>
+      <td>[fishing, best friend, duringcreditsstinger]</td>
+      <td>[Romance, Comedy]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>The next step would be to convert the names and keyword instances into lowercase and strip all the spaces between them. This is done so that our vectorizer doesn’t count the Johnny of “Johnny Depp” and “Johnny Galecki” as the same. After this processing step, the aforementioned actors will be represented as “johnnydepp” and “johnnygalecki” and will be distinct to our vectorizer.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Function to convert all strings to lower case and strip names of spaces</span>
+<span class="k">def</span> <span class="nf">clean_data</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">" "</span><span class="p">,</span> <span class="s">""</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c">#Check if director exists. If not, return empty string</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">" "</span><span class="p">,</span> <span class="s">""</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">''</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Apply clean_data function to your features.</span>
+<span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'cast'</span><span class="p">,</span> <span class="s">'keywords'</span><span class="p">,</span> <span class="s">'director'</span><span class="p">,</span> <span class="s">'genres'</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+    <span class="n">metadata</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">feature</span><span class="p">]</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">clean_data</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>We are now ready to create our “metadata soup”, which is a string that contains all the metadata that we want to run through our vectorizer.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">create_soup</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">'keywords'</span><span class="p">])</span> <span class="o">+</span> <span class="s">' '</span> <span class="o">+</span> <span class="s">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">'cast'</span><span class="p">])</span> <span class="o">+</span> <span class="s">' '</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="s">'director'</span><span class="p">]</span> <span class="o">+</span> <span class="s">' '</span> <span class="o">+</span> <span class="s">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">'genres'</span><span class="p">])</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Create a new soup feature</span>
+<span class="n">metadata</span><span class="p">[</span><span class="s">'soup'</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="nb">apply</span><span class="p">(</span><span class="n">create_soup</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>The next step is similar to our Plot Description Based Recommendation System. The one important difference is that we will use the <code class="highlighter-rouge">CountVectorizer()</code> instead of TF-IDF. This is because we do not want to downgrade the presence of an actor/director if he or she has acted or directed in relatively more movies.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Import CountVectorizer and create the count matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
+
+<span class="n">count</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">stop_words</span><span class="o">=</span><span class="s">'english'</span><span class="p">)</span>
+<span class="n">count_matrix</span> <span class="o">=</span> <span class="n">count</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s">'soup'</span><span class="p">])</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Compute the Cosine Similarity matrix based on the count_matrix</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">cosine_similarity</span>
+
+<span class="n">cosine_sim2</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">(</span><span class="n">count_matrix</span><span class="p">,</span> <span class="n">count_matrix</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># Reset index of your main DataFrame and construct reverse mapping as before</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+<span class="n">indices</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s">'title'</span><span class="p">])</span>
+</code></pre>
+</div>
+
+<p>We can reuse the <code class="highlighter-rouge">get_recommendations()</code> function by passing in the new <code class="highlighter-rouge">cosine_sim2</code> matrix as our second argument.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">get_recommendations</span><span class="p">(</span><span class="s">'The Dark Knight Rises'</span><span class="p">,</span> <span class="n">cosine_sim2</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>12589      The Dark Knight
+10210        Batman Begins
+9311                Shiner
+9874       Amongst Friends
+7772              Mitchell
+516      Romeo Is Bleeding
+11463         The Prestige
+24090            Quicksand
+25038             Deadfall
+41063                 Sara
+Name: title, dtype: object
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">get_recommendations</span><span class="p">(</span><span class="s">'The Godfather'</span><span class="p">,</span> <span class="n">cosine_sim2</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>1934            The Godfather: Part III
+1199             The Godfather: Part II
+15609                   The Rain People
+18940                         Last Exit
+34488                              Rege
+35802            Manuscripts Don't Burn
+35803            Manuscripts Don't Burn
+8001     The Night of the Following Day
+18261                 The Son of No One
+28683            In the Name of the Law
+Name: title, dtype: object
+</code></pre>
+</div>
+
+<p>Our recommendation system has been successful in capturing more information due to more metadata and has given us a better recommendations. There are numerous ways of playing with this system in order to improve recommendations.</p>
+
+<p>Some suggestions:</p>
+
+<ul>
+  <li>Introduce a popularity filter: this recommendation system would take the list of the 30 most similar movies, calculate the weighted ratings (using the IMDB formula from above), sort movies based on this rating and return the top 10 movies.</li>
+  <li>Other crew members: other crew member names, such as screenwriters and producers, could also be included.</li>
+  <li>Increasing weight of the director: to give more weight to the director, he or she could be mentioned multiple times in the soup to increase the similarity scores of movies with the same director.</li>
+</ul>
+
+<h1 id="3-collaborative-filtering">3. Collaborative Filtering</h1>
+<p>Another popular type of recommendation systems is known as Collaborative Filtering.</p>
+
+<p>Collaborative Filtering can further be classified into two types:</p>
+
+<ol>
+  <li>
+    <p><code class="highlighter-rouge">User-based Filtering</code>: these systems recommend products to a user that similar users have liked. For example, let’s say Alice and Bob have a similar interest in books (that is, they largely like and dislike the same books). Now, let’s say a new book has been launched into the market and Alice has read and loved it. It is therefore, highly likely that Bob will like it too and therefore, the system recommends this book to Bob.</p>
+  </li>
+  <li>
+    <p><code class="highlighter-rouge">Item-based Filtering</code>: these systems are extremely similar to the content recommendation engine that you built. These systems identify similar items based on how people have rated it in the past. For example, if Alice, Bob and Eve have given 5 stars to The Lord of the Rings and The Hobbit, the system identifies the items as similar. Therefore, if someone buys The Lord of the Rings, the system also recommends The Hobbit to him or her.</p>
+  </li>
+</ol>
+
+<p>Our content based engine suffers from some limitations. It is only capable of suggesting movies that are close to a certain movie. That is, it is not capable of capturing tastes and providing recommendations across genres.</p>
+
+<p>Also, the engine that we built is not really personal in that it doesn’t capture the personal tastes and biases of a user. Anyone querying our engine for recommendations based on a movie will receive the same recommendations for that movie, regardless of their personal attributes.</p>
+
+<p>Therefore, in this section, we will use a technique called Collaborative Filtering to make recommendations to movie viewers. Collaborative Filtering is based on the idea that users similar to an individual can be used to predict how much they will like a particular product or service that those users have experienced but they have not.</p>
+
+<p>We will be using the Surprise library that uses extremely powerful algorithms like Singular Value Decomposition (SVD) to minimise RMSE (Root Mean Square Error) and give better recommendations.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">literal_eval</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">TfidfVectorizer</span><span class="p">,</span> <span class="n">CountVectorizer</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="kn">import</span> <span class="n">linear_kernel</span><span class="p">,</span> <span class="n">cosine_similarity</span>
+<span class="kn">from</span> <span class="nn">nltk.stem.snowball</span> <span class="kn">import</span> <span class="n">SnowballStemmer</span>
+<span class="kn">from</span> <span class="nn">nltk.stem.wordnet</span> <span class="kn">import</span> <span class="n">WordNetLemmatizer</span>
+<span class="kn">from</span> <span class="nn">nltk.corpus</span> <span class="kn">import</span> <span class="n">wordnet</span>
+<span class="kn">from</span> <span class="nn">surprise</span> <span class="kn">import</span> <span class="n">Reader</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">SVD</span><span class="p">,</span> <span class="n">evaluate</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">reader</span> <span class="o">=</span> <span class="n">Reader</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">ratings</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'ratings_small.csv'</span><span class="p">)</span>
+<span class="n">ratings</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>userId</th>
+      <th>movieId</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>31</td>
+      <td>2.5</td>
+      <td>1260759144</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>1029</td>
+      <td>3.0</td>
+      <td>1260759179</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>1061</td>
+      <td>3.0</td>
+      <td>1260759182</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>1129</td>
+      <td>2.0</td>
+      <td>1260759185</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>1172</td>
+      <td>4.0</td>
+      <td>1260759205</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">data</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">load_from_df</span><span class="p">(</span><span class="n">ratings</span><span class="p">[[</span><span class="s">'userId'</span><span class="p">,</span> <span class="s">'movieId'</span><span class="p">,</span> <span class="s">'rating'</span><span class="p">]],</span> <span class="n">reader</span><span class="p">)</span>
+<span class="n">data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">n_folds</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">svd</span> <span class="o">=</span> <span class="n">SVD</span><span class="p">()</span>
+<span class="n">evaluate</span><span class="p">(</span><span class="n">svd</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">measures</span><span class="o">=</span><span class="p">[</span><span class="s">'RMSE'</span><span class="p">,</span> <span class="s">'MAE'</span><span class="p">])</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Evaluating RMSE, MAE of algorithm SVD.
+
+------------
+Fold 1
+RMSE: 0.8934
+MAE:  0.6887
+------------
+Fold 2
+RMSE: 0.8969
+MAE:  0.6900
+------------
+Fold 3
+RMSE: 0.8926
+MAE:  0.6874
+------------
+Fold 4
+RMSE: 0.8961
+MAE:  0.6919
+------------
+Fold 5
+RMSE: 0.9006
+MAE:  0.6929
+------------
+------------
+Mean RMSE: 0.8959
+Mean MAE : 0.6902
+------------
+------------
+
+
+
+
+
+CaseInsensitiveDefaultDict(list,
+                           {'rmse': [0.8933860941982121,
+                             0.8969233722558052,
+                             0.8925931195006682,
+                             0.896131927615416,
+                             0.9005532920542285],
+                            'mae': [0.688678230673435,
+                             0.6899762071788088,
+                             0.6874410687546039,
+                             0.6919108848656457,
+                             0.6928566751129651]})
+</code></pre>
+</div>
+
+<p>We get a mean Root Mean Sqaure Error of 0.8963 which is more than good enough for our case. Now lets train on our dataset and arrive at predictions.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">trainset</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">build_full_trainset</span><span class="p">()</span>
+<span class="n">svd</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">trainset</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;surprise.prediction_algorithms.matrix_factorization.SVD at 0x10d23b438&gt;
+</code></pre>
+</div>
+
+<p>Lets pick userid 1 and check the ratings they have given.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">ratings</span><span class="p">[</span><span class="n">ratings</span><span class="p">[</span><span class="s">'userId'</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>userId</th>
+      <th>movieId</th>
+      <th>rating</th>
+      <th>timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>31</td>
+      <td>2.5</td>
+      <td>1260759144</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>1029</td>
+      <td>3.0</td>
+      <td>1260759179</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>1061</td>
+      <td>3.0</td>
+      <td>1260759182</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>1129</td>
+      <td>2.0</td>
+      <td>1260759185</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>1172</td>
+      <td>4.0</td>
+      <td>1260759205</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1</td>
+      <td>1263</td>
+      <td>2.0</td>
+      <td>1260759151</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1</td>
+      <td>1287</td>
+      <td>2.0</td>
+      <td>1260759187</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>1</td>
+      <td>1293</td>
+      <td>2.0</td>
+      <td>1260759148</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>1</td>
+      <td>1339</td>
+      <td>3.5</td>
+      <td>1260759125</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1</td>
+      <td>1343</td>
+      <td>2.0</td>
+      <td>1260759131</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>1</td>
+      <td>1371</td>
+      <td>2.5</td>
+      <td>1260759135</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>1</td>
+      <td>1405</td>
+      <td>1.0</td>
+      <td>1260759203</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>1</td>
+      <td>1953</td>
+      <td>4.0</td>
+      <td>1260759191</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>1</td>
+      <td>2105</td>
+      <td>4.0</td>
+      <td>1260759139</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>1</td>
+      <td>2150</td>
+      <td>3.0</td>
+      <td>1260759194</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>1</td>
+      <td>2193</td>
+      <td>2.0</td>
+      <td>1260759198</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>1</td>
+      <td>2294</td>
+      <td>2.0</td>
+      <td>1260759108</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>1</td>
+      <td>2455</td>
+      <td>2.5</td>
+      <td>1260759113</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>1</td>
+      <td>2968</td>
+      <td>1.0</td>
+      <td>1260759200</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>1</td>
+      <td>3671</td>
+      <td>3.0</td>
+      <td>1260759117</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">svd</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">302</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Prediction(uid=1, iid=302, r_ui=3, est=2.8603227982448582, details={'was_impossible': False})
+</code></pre>
+</div>
+
+<p>For movie with ID 302, we get an estimated prediction of 2.686. One great feature of this recommendation system is that it doesn’t care what the movie is, or what it contains. It works purely on the basis of an assigned movie ID and tries to predict ratings based on how the other users have predicted the movie.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code>
+</code></pre>
+</div>
+
+    </article>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="http://localhost:4000/assets/js/validator.js"></script>
+<script src="/assets/js/app.js"></script>
+
+    </section>
+  </body>
+</html>

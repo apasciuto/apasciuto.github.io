@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/BlogPosting" {% if page.main-class %}class="post-{{ page.main-class }}"{% endif %}>
+  <link rel="stylesheet" type="text/css" href="{{site.baseurl}}/assets/css/screen.css">
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Source+Code+Pro">
+  <link rel="stylesheet" type="text/css" href="{{site.baseurl}}/assets/css/custom.css" />
+  <link rel="stylesheet" type="text/css" href="{{site.baseurl}}/assets/css/grid.css">
+  <link rel="stylesheet" type="text/css" href="{{site.baseurl}}/assets/css/jupyter.css">
+  <link rel="stylesheet" type="text/css" href="{{site.baseurl}}/assets/css/notebook.css">
+  <body>
+    <section class="post">
+
+    <article role="article" id="post" class="post-content" itemprop="articleBody">
+    {{ content }}
+    </article>
+
+    {% include footer.html %}
+    </section>
+  </body>
+</html>

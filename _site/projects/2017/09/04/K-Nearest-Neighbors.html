@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/BlogPosting" >
+  <link rel="stylesheet" type="text/css" href="/assets/css/screen.css">
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Source+Code+Pro">
+  <link rel="stylesheet" type="text/css" href="/assets/css/custom.css" />
+  <link rel="stylesheet" type="text/css" href="/assets/css/grid.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/jupyter.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/notebook.css">
+  <body>
+    <section class="post">
+
+    <article role="article" id="post" class="post-content" itemprop="articleBody">
+    <p>Using k-Nearest Neighbors (k-NN) to Predict Car Prices.</p>
+
+<!--end-->
+
+<h1 id="car-prices-k-nearest-neighbors">Car Prices: K-Nearest Neighbors</h1>
+
+<p><strong>Using k-Nearest Neighbors (k-</strong>NN<strong>) to Predict Car Prices.</strong></p>
+
+<h1 id="1-the-data">1. The Data</h1>
+
+<p>The <a href="https://archive.ics.uci.edu/ml/machine-learning-databases/autos/imports-85.data">data</a> that we will be using is compiled from the <a href="https://archive.ics.uci.edu/ml/datasets/automobile">University of California Irvine’s Website</a> and contains the following car attributes:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Columns</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><strong>symboling</strong></td>
+      <td style="text-align: left">-3, -2, -1, 0, 1, 2, 3</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>normalized-losses</strong></td>
+      <td style="text-align: left">continuous from 65 to 256</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>make</strong></td>
+      <td style="text-align: left">alfa-romero, audi, bmw, chevrolet, dodge, honda, isuzu, jaguar, mazda, mercedes-benz, mercury, mitsubishi, nissan, peugot, plymouth, porsche, renault, saab, subaru, toyota, volkswagen, volvo</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>fuel-type</strong></td>
+      <td style="text-align: left">diesel, gas</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>aspiration</strong></td>
+      <td style="text-align: left">std, turbo</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>num-of-doors</strong></td>
+      <td style="text-align: left">four, two</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>body-style</strong></td>
+      <td style="text-align: left">hardtop, wagon, sedan, hatchback, convertible</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>drive-wheels</strong></td>
+      <td style="text-align: left">4wd, fwd, rwd</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>engine-location</strong></td>
+      <td style="text-align: left">front, rear</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>wheel-base</strong></td>
+      <td style="text-align: left">continuous from 86.6 120.9</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>length</strong></td>
+      <td style="text-align: left">continuous from 141.1 to 208.1</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>width</strong></td>
+      <td style="text-align: left">continuous from 60.3 to 72.3</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>height</strong></td>
+      <td style="text-align: left">continuous from 47.8 to 59.8</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>curb-weight</strong></td>
+      <td style="text-align: left">continuous from 1488 to 4066</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>engine-type</strong></td>
+      <td style="text-align: left">dohc, dohcv, l, ohc, ohcf, ohcv, rotor</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>num-of-cylinders</strong></td>
+      <td style="text-align: left">eight, five, four, six, three, twelve, two</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>engine-size</strong></td>
+      <td style="text-align: left">continuous from 61 to 326</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>fuel-system</strong></td>
+      <td style="text-align: left">1bbl, 2bbl, 4bbl, idi, mfi, mpfi, spdi, spfi</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>bore</strong></td>
+      <td style="text-align: left">continuous from 2.54 to 3.94</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>stroke</strong></td>
+      <td style="text-align: left">continuous from 2.07 to 4.17</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>compression-ratio</strong></td>
+      <td style="text-align: left">continuous from 7 to 23</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>horsepower</strong></td>
+      <td style="text-align: left">continuous from 48 to 288</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>peak-rpm</strong></td>
+      <td style="text-align: left">continuous from 4150 to 6600</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>city-mpg</strong></td>
+      <td style="text-align: left">continuous from 13 to 49</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>highway-mpg</strong></td>
+      <td style="text-align: left">continuous from 16 to 54</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>price</strong></td>
+      <td style="text-align: left">continuous from 5118 to 45400</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The <code class="highlighter-rouge">imports-85.data</code> data set columns do not match the columns from our <a href="https://archive.ics.uci.edu/ml/datasets/automobile">Dataset’s Documentation</a> and we will need to provide additional parameters to effectively work with our data.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">max_columns</span> <span class="o">=</span> <span class="mi">99</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s">'symboling'</span><span class="p">,</span> <span class="s">'normalized-losses'</span><span class="p">,</span> <span class="s">'make'</span><span class="p">,</span> <span class="s">'fuel-type'</span><span class="p">,</span> <span class="s">'aspiration'</span><span class="p">,</span> <span class="s">'num-of-doors'</span><span class="p">,</span> <span class="s">'body-style'</span><span class="p">,</span> 
+        <span class="s">'drive-wheels'</span><span class="p">,</span> <span class="s">'engine-location'</span><span class="p">,</span> <span class="s">'wheel-base'</span><span class="p">,</span> <span class="s">'length'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'height'</span><span class="p">,</span> <span class="s">'curb-weight'</span><span class="p">,</span> <span class="s">'engine-type'</span><span class="p">,</span> 
+        <span class="s">'num-of-cylinders'</span><span class="p">,</span> <span class="s">'engine-size'</span><span class="p">,</span> <span class="s">'fuel-system'</span><span class="p">,</span> <span class="s">'bore'</span><span class="p">,</span> <span class="s">'stroke'</span><span class="p">,</span> <span class="s">'compression-rate'</span><span class="p">,</span> <span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'peak-rpm'</span><span class="p">,</span> <span class="s">'city-mpg'</span><span class="p">,</span> <span class="s">'highway-mpg'</span><span class="p">,</span> <span class="s">'price'</span><span class="p">]</span>
+<span class="n">cars</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">'imports-85.data'</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">cars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symboling</th>
+      <th>normalized-losses</th>
+      <th>make</th>
+      <th>fuel-type</th>
+      <th>aspiration</th>
+      <th>num-of-doors</th>
+      <th>body-style</th>
+      <th>drive-wheels</th>
+      <th>engine-location</th>
+      <th>wheel-base</th>
+      <th>length</th>
+      <th>width</th>
+      <th>height</th>
+      <th>curb-weight</th>
+      <th>engine-type</th>
+      <th>num-of-cylinders</th>
+      <th>engine-size</th>
+      <th>fuel-system</th>
+      <th>bore</th>
+      <th>stroke</th>
+      <th>compression-rate</th>
+      <th>horsepower</th>
+      <th>peak-rpm</th>
+      <th>city-mpg</th>
+      <th>highway-mpg</th>
+      <th>price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>?</td>
+      <td>alfa-romero</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>two</td>
+      <td>convertible</td>
+      <td>rwd</td>
+      <td>front</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548</td>
+      <td>dohc</td>
+      <td>four</td>
+      <td>130</td>
+      <td>mpfi</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111</td>
+      <td>5000</td>
+      <td>21</td>
+      <td>27</td>
+      <td>13495</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3</td>
+      <td>?</td>
+      <td>alfa-romero</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>two</td>
+      <td>convertible</td>
+      <td>rwd</td>
+      <td>front</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548</td>
+      <td>dohc</td>
+      <td>four</td>
+      <td>130</td>
+      <td>mpfi</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111</td>
+      <td>5000</td>
+      <td>21</td>
+      <td>27</td>
+      <td>16500</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>?</td>
+      <td>alfa-romero</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>two</td>
+      <td>hatchback</td>
+      <td>rwd</td>
+      <td>front</td>
+      <td>94.5</td>
+      <td>171.2</td>
+      <td>65.5</td>
+      <td>52.4</td>
+      <td>2823</td>
+      <td>ohcv</td>
+      <td>six</td>
+      <td>152</td>
+      <td>mpfi</td>
+      <td>2.68</td>
+      <td>3.47</td>
+      <td>9.0</td>
+      <td>154</td>
+      <td>5000</td>
+      <td>19</td>
+      <td>26</td>
+      <td>16500</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2</td>
+      <td>164</td>
+      <td>audi</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>four</td>
+      <td>sedan</td>
+      <td>fwd</td>
+      <td>front</td>
+      <td>99.8</td>
+      <td>176.6</td>
+      <td>66.2</td>
+      <td>54.3</td>
+      <td>2337</td>
+      <td>ohc</td>
+      <td>four</td>
+      <td>109</td>
+      <td>mpfi</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>10.0</td>
+      <td>102</td>
+      <td>5500</td>
+      <td>24</td>
+      <td>30</td>
+      <td>13950</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2</td>
+      <td>164</td>
+      <td>audi</td>
+      <td>gas</td>
+      <td>std</td>
+      <td>four</td>
+      <td>sedan</td>
+      <td>4wd</td>
+      <td>front</td>
+      <td>99.4</td>
+      <td>176.6</td>
+      <td>66.4</td>
+      <td>54.3</td>
+      <td>2824</td>
+      <td>ohc</td>
+      <td>five</td>
+      <td>136</td>
+      <td>mpfi</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>8.0</td>
+      <td>115</td>
+      <td>5500</td>
+      <td>18</td>
+      <td>22</td>
+      <td>17450</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h1 id="2-data-cleaning">2. Data Cleaning</h1>
+
+<p>After observing the data set above we can see that the <code class="highlighter-rouge">normalized-losses</code> column contains missing values that are represented by <code class="highlighter-rouge">?</code>. Let’s replace these values and look for the presence of missing values in other numeric columns. We will also need to normalize the values in all numeric columns if we want to use them for predicitive modeling.</p>
+
+<h3 id="21-selecting-continuous-values">2.1 Selecting Continuous Values</h3>
+
+<p>We will select only the columns with continuous values based off of our <a href="https://archive.ics.uci.edu/ml/datasets/automobile">Dataset’s Documentation</a></p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">continuous_values_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s">'normalized-losses'</span><span class="p">,</span> <span class="s">'wheel-base'</span><span class="p">,</span> <span class="s">'length'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'height'</span><span class="p">,</span> <span class="s">'curb-weight'</span><span class="p">,</span> <span class="s">'bore'</span><span class="p">,</span> <span class="s">'stroke'</span><span class="p">,</span> <span class="s">'compression-rate'</span><span class="p">,</span> <span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'peak-rpm'</span><span class="p">,</span> <span class="s">'city-mpg'</span><span class="p">,</span> <span class="s">'highway-mpg'</span><span class="p">,</span> <span class="s">'price'</span><span class="p">]</span>
+<span class="n">numeric_cars</span> <span class="o">=</span> <span class="n">cars</span><span class="p">[</span><span class="n">continuous_values_cols</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">numeric_cars</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>normalized-losses</th>
+      <th>wheel-base</th>
+      <th>length</th>
+      <th>width</th>
+      <th>height</th>
+      <th>curb-weight</th>
+      <th>bore</th>
+      <th>stroke</th>
+      <th>compression-rate</th>
+      <th>horsepower</th>
+      <th>peak-rpm</th>
+      <th>city-mpg</th>
+      <th>highway-mpg</th>
+      <th>price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>?</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111</td>
+      <td>5000</td>
+      <td>21</td>
+      <td>27</td>
+      <td>13495</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>?</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111</td>
+      <td>5000</td>
+      <td>21</td>
+      <td>27</td>
+      <td>16500</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>?</td>
+      <td>94.5</td>
+      <td>171.2</td>
+      <td>65.5</td>
+      <td>52.4</td>
+      <td>2823</td>
+      <td>2.68</td>
+      <td>3.47</td>
+      <td>9.0</td>
+      <td>154</td>
+      <td>5000</td>
+      <td>19</td>
+      <td>26</td>
+      <td>16500</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>164</td>
+      <td>99.8</td>
+      <td>176.6</td>
+      <td>66.2</td>
+      <td>54.3</td>
+      <td>2337</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>10.0</td>
+      <td>102</td>
+      <td>5500</td>
+      <td>24</td>
+      <td>30</td>
+      <td>13950</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>164</td>
+      <td>99.4</td>
+      <td>176.6</td>
+      <td>66.4</td>
+      <td>54.3</td>
+      <td>2824</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>8.0</td>
+      <td>115</td>
+      <td>5500</td>
+      <td>18</td>
+      <td>22</td>
+      <td>17450</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3 id="22-replacing-values">2.2 Replacing Values</h3>
+
+<p>Using the <a href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.replace.html">DataFrame.replace()</a> method we can replace all of the <code class="highlighter-rouge">?</code> values with the <code class="highlighter-rouge">numpy.nan</code> missing value:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">numeric_cars</span> <span class="o">=</span> <span class="n">numeric_cars</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">'?'</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+<span class="n">numeric_cars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>normalized-losses</th>
+      <th>wheel-base</th>
+      <th>length</th>
+      <th>width</th>
+      <th>height</th>
+      <th>curb-weight</th>
+      <th>bore</th>
+      <th>stroke</th>
+      <th>compression-rate</th>
+      <th>horsepower</th>
+      <th>peak-rpm</th>
+      <th>city-mpg</th>
+      <th>highway-mpg</th>
+      <th>price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaN</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111</td>
+      <td>5000</td>
+      <td>21</td>
+      <td>27</td>
+      <td>13495</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>NaN</td>
+      <td>88.6</td>
+      <td>168.8</td>
+      <td>64.1</td>
+      <td>48.8</td>
+      <td>2548</td>
+      <td>3.47</td>
+      <td>2.68</td>
+      <td>9.0</td>
+      <td>111</td>
+      <td>5000</td>
+      <td>21</td>
+      <td>27</td>
+      <td>16500</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>NaN</td>
+      <td>94.5</td>
+      <td>171.2</td>
+      <td>65.5</td>
+      <td>52.4</td>
+      <td>2823</td>
+      <td>2.68</td>
+      <td>3.47</td>
+      <td>9.0</td>
+      <td>154</td>
+      <td>5000</td>
+      <td>19</td>
+      <td>26</td>
+      <td>16500</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>164</td>
+      <td>99.8</td>
+      <td>176.6</td>
+      <td>66.2</td>
+      <td>54.3</td>
+      <td>2337</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>10.0</td>
+      <td>102</td>
+      <td>5500</td>
+      <td>24</td>
+      <td>30</td>
+      <td>13950</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>164</td>
+      <td>99.4</td>
+      <td>176.6</td>
+      <td>66.4</td>
+      <td>54.3</td>
+      <td>2824</td>
+      <td>3.19</td>
+      <td>3.40</td>
+      <td>8.0</td>
+      <td>115</td>
+      <td>5500</td>
+      <td>18</td>
+      <td>22</td>
+      <td>17450</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>After replacing the <code class="highlighter-rouge">?</code> values, we need to determine the columns that need to be converted to numeric types. We will then use the <a href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.astype.html">DataFrame.astype()</a> method to convert the column types:</p>
+
+<h3 id="23-converting-values">2.3 Converting Values</h3>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">numeric_cars</span> <span class="o">=</span> <span class="n">numeric_cars</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">'float'</span><span class="p">)</span>
+<span class="n">numeric_cars</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>normalized-losses    41
+wheel-base            0
+length                0
+width                 0
+height                0
+curb-weight           0
+bore                  4
+stroke                4
+compression-rate      0
+horsepower            2
+peak-rpm              2
+city-mpg              0
+highway-mpg           0
+price                 4
+dtype: int64
+</code></pre>
+</div>
+
+<h3 id="24-columns-with-missing-values">2.4 Columns with Missing Values</h3>
+
+<p>We observe that the following columns have missing values:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">41</code> rows have a missing value for the <code class="highlighter-rouge">normalized-losses</code> column</li>
+  <li><code class="highlighter-rouge">4</code> rows have a missing value for the <code class="highlighter-rouge">bore</code> column</li>
+  <li><code class="highlighter-rouge">4</code> rows have a missing value for the <code class="highlighter-rouge">stroke</code> column</li>
+  <li><code class="highlighter-rouge">2</code> rows have a missing value for the <code class="highlighter-rouge">horsepower</code> column</li>
+  <li><code class="highlighter-rouge">2</code> rows have a missing value for the <code class="highlighter-rouge">peak-rpm</code> column</li>
+  <li><code class="highlighter-rouge">4</code> rows have a missing value for the <code class="highlighter-rouge">price</code> column</li>
+</ul>
+
+<p>We need to determine the correct approach to handling these missing values so that we don’t interfer with the integrity of the data.</p>
+
+<h3 id="25-identifying-the-target-column-and-handling-missing-values">2.5 Identifying the Target Column and Handling Missing Values</h3>
+
+<p>Because the <code class="highlighter-rouge">price</code> column is what we want to predict, let’s remove any rows with missing <code class="highlighter-rouge">price</code> values:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">numeric_cars</span> <span class="o">=</span> <span class="n">numeric_cars</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s">'price'</span><span class="p">])</span>
+<span class="n">numeric_cars</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>normalized-losses    37
+wheel-base            0
+length                0
+width                 0
+height                0
+curb-weight           0
+bore                  4
+stroke                4
+compression-rate      0
+horsepower            2
+peak-rpm              2
+city-mpg              0
+highway-mpg           0
+price                 0
+dtype: int64
+</code></pre>
+</div>
+
+<p>We will replace missing values in the other columns using the column’s mean (average) value:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">numeric_cars</span> <span class="o">=</span> <span class="n">numeric_cars</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">numeric_cars</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</code></pre>
+</div>
+
+<p>Let’s confirm that there are no more missing values:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">numeric_cars</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>normalized-losses    0
+wheel-base           0
+length               0
+width                0
+height               0
+curb-weight          0
+bore                 0
+stroke               0
+compression-rate     0
+horsepower           0
+peak-rpm             0
+city-mpg             0
+highway-mpg          0
+price                0
+dtype: int64
+</code></pre>
+</div>
+
+<h3 id="26-normalizing-columns">2.6 Normalizing Columns</h3>
+
+<p>Finally, we can normalize all columnns to range from <code class="highlighter-rouge">0</code> to <code class="highlighter-rouge">1</code> except our target column (<code class="highlighter-rouge">price</code>).</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">price_col</span> <span class="o">=</span> <span class="n">numeric_cars</span><span class="p">[</span><span class="s">'price'</span><span class="p">]</span>
+<span class="n">numeric_cars</span> <span class="o">=</span> <span class="p">(</span><span class="n">numeric_cars</span><span class="o">.</span><span class="nb">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">numeric_cars</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">numeric_cars</span><span class="o">.</span><span class="nb">max</span><span class="p">())</span>
+<span class="n">numeric_cars</span><span class="p">[</span><span class="s">'price'</span><span class="p">]</span> <span class="o">=</span> <span class="n">price_col</span>
+</code></pre>
+</div>
+
+<h1 id="3-univariate-model">3. Univariate Model</h1>
+
+<p>We will start with some univariate k-nearest neighbors models and move to more complex ones to help us structure our code workflow and better understand the features.</p>
+
+<p>We will create a function named <code class="highlighter-rouge">knn_train_test()</code> that encapsulates the traing and simple validation process. The function will:</p>
+<ul>
+  <li>Split the data set into a training and test set</li>
+  <li>Instantiate the KNeighborsRegressor class, fit the model on the training set, and make predictions on the test set</li>
+  <li>Calculate the RMSE and return that value</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">knn_train_test</span><span class="p">(</span><span class="n">train_col</span><span class="p">,</span> <span class="n">target_col</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        
+    <span class="c"># Randomize order of rows in DataFrame</span>
+    <span class="n">shuffled_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">rand_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">shuffled_index</span><span class="p">)</span>
+
+    <span class="c"># Divide number of rows in half and round</span>
+    <span class="n">last_train_row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rand_df</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c"># Select the first half and set as training set</span>
+    <span class="n">train_df</span> <span class="o">=</span> <span class="n">rand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">last_train_row</span><span class="p">]</span>
+    <span class="c"># Select the second half and set as test set</span>
+    <span class="n">test_df</span> <span class="o">=</span> <span class="n">rand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">last_train_row</span><span class="p">:]</span>
+    
+    <span class="c"># train, and test a univariate model using the following k values (1, 3, 5, 7, 9)</span>
+    <span class="n">k_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">]</span>
+    <span class="n">k_rmses</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_values</span><span class="p">:</span>
+        <span class="c"># Fit model using k nearest neighbors</span>
+        <span class="n">knn</span> <span class="o">=</span> <span class="n">KNeighborsRegressor</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">knn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_df</span><span class="p">[[</span><span class="n">train_col</span><span class="p">]],</span> <span class="n">train_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">])</span>
+
+        <span class="c"># Make predictions using model</span>
+        <span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_df</span><span class="p">[[</span><span class="n">train_col</span><span class="p">]])</span>
+
+        <span class="c"># Calculate and return RMSE.</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">test_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">],</span> <span class="n">predicted_labels</span><span class="p">)</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mse</span><span class="p">)</span>
+        
+        <span class="n">k_rmses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse</span>
+    <span class="k">return</span> <span class="n">k_rmses</span>
+
+<span class="n">k_rmse_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c"># For each column (minus `price`), train a model, return RMSE value and add to the dictionary `rmse_results`</span>
+<span class="n">train_cols</span> <span class="o">=</span> <span class="n">numeric_cars</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s">'price'</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">train_cols</span><span class="p">:</span>
+    <span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+    <span class="n">k_rmse_results</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="n">k_rmse_results</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="err">'bore':</span><span class="w"> </span><span class="err">{1:</span><span class="w"> </span><span class="err">7496.1492312406444,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">6936.9888741632003,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">6816.8537123691885,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">7062.0613050538341,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">6869.7274373649016</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'city-mpg':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">4540.3610032247389,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">4662.4683767438482,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">4729.6734209992692,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">5099.2742894698586,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4999.2917237740958</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'compression-rate':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">9024.9026779536325,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">7033.5529229950389,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">6736.676353123451,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">7459.1131944220724,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">7219.385481303907</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'curb-weight':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">5518.8832374058084,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">5048.6077260366692,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">4437.9343946355393,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">4369.3490898512136,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4632.2055452210743</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'height':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">9108.4718365936551,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">8049.9871472883196,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">7487.6525188849646,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">7753.7974180840583,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">7695.632426557866</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'highway-mpg':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">5270.360471073066,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">4618.1866223408379,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">4579.0372499290315,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">4914.2600028726101,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">5181.9124189636359</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'horsepower':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">3749.5962185254293,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">3964.9503610053594,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">4007.4723516831596,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">4391.4816735297054,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4505.1886320053109</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'length':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">5291.7851645472883,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">5267.2167776785409,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">5382.6711551381659,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">5396.362242025737,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">5420.5479164322587</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'normalized-losses':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">7906.5941410250143,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">6712.8733553798356,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">7635.1704160923791,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">7870.6510032392407,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">8221.5784655443185</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'peak-rpm':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">9825.559283202294,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">8025.1729800507092,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">7498.7464749413657,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">7296.5172664110205,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">7239.4781688794701</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'stroke':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">7282.3488587810798,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">7664.9840308065386,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">8078.4912887356768,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">7754.4838594616886,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">7723.9131538450647</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'wheel-base':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">5964.6822353178914,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">5246.472910232148,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">5527.6824887322919,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">5485.6830335257237,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">5734.4339857054465</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'width':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">4453.161424568767,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">4697.2871145506588,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">4644.8984285434217,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">4562.1341847495605,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4643.8823393933362</span><span class="p">}</span><span class="err">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Below we will visualize the results using a line plot:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">k_rmse_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'k value'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'RMSE'</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p><img src="/assets/media/car-prices/CarPrices_28_0.png" alt="png" /></p>
+
+<h1 id="4-multivariate-model">4. Multivariate Model</h1>
+
+<p>Compute average RMSE across different <code class="highlighter-rouge">k</code> values for each feature:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">feature_avg_rmse</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">k_rmse_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">avg_rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="n">feature_avg_rmse</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">avg_rmse</span>
+<span class="n">series_avg_rmse</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">feature_avg_rmse</span><span class="p">)</span>
+<span class="n">series_avg_rmse</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>horsepower           4123.737847
+width                4600.272698
+curb-weight          4801.395999
+city-mpg             4806.213763
+highway-mpg          4912.751353
+length               5351.716651
+wheel-base           5591.790931
+bore                 7036.356112
+compression-rate     7494.726126
+normalized-losses    7669.373476
+stroke               7700.844238
+peak-rpm             7977.094835
+height               8019.108269
+dtype: float64
+</code></pre>
+</div>
+
+<p>We can now modify the <code class="highlighter-rouge">knn_train_test()</code> function to work with multiple columns:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">knn_train_test</span><span class="p">(</span><span class="n">train_cols</span><span class="p">,</span> <span class="n">target_col</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c"># Randomize order of rows in DataFrame</span>
+    <span class="n">shuffled_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">rand_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">shuffled_index</span><span class="p">)</span>
+
+    <span class="c"># Divide number of rows in half and round</span>
+    <span class="n">last_train_row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rand_df</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c"># Select the first half and set as training set</span>
+    <span class="n">train_df</span> <span class="o">=</span> <span class="n">rand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">last_train_row</span><span class="p">]</span>
+    <span class="c"># Select the second half and set as test set</span>
+    <span class="n">test_df</span> <span class="o">=</span> <span class="n">rand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">last_train_row</span><span class="p">:]</span>
+    
+    <span class="n">k_values</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+    <span class="n">k_rmses</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_values</span><span class="p">:</span>
+        <span class="c"># Fit model using k nearest neighbors</span>
+        <span class="n">knn</span> <span class="o">=</span> <span class="n">KNeighborsRegressor</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">knn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_df</span><span class="p">[</span><span class="n">train_cols</span><span class="p">],</span> <span class="n">train_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">])</span>
+
+        <span class="c"># Make predictions using model</span>
+        <span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_df</span><span class="p">[</span><span class="n">train_cols</span><span class="p">])</span>
+
+        <span class="c"># Calculate and return RMSE</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">test_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">],</span> <span class="n">predicted_labels</span><span class="p">)</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mse</span><span class="p">)</span>
+        
+        <span class="n">k_rmses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse</span>
+    <span class="k">return</span> <span class="n">k_rmses</span>
+
+<span class="n">k_rmse_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c"># Use the best 2 features to train and test a multivariate k-nearest neighbors model using the default `k` value</span>
+<span class="n">two_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">two_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"two best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="c"># Use the best 3 features to train and test a multivariate k-nearest neighbors model using the default `k` value</span>
+<span class="n">three_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">three_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"three best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="c"># Use the best 4 features to train and test a multivariate k-nearest neighbors model using the default `k` value</span>
+<span class="n">four_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span><span class="p">,</span> <span class="s">'city-mpg'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">four_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"four best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="c"># Use the best 5 features to train and test a multivariate k-nearest neighbors model using the default `k` value</span>
+<span class="n">five_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span> <span class="p">,</span> <span class="s">'city-mpg'</span> <span class="p">,</span> <span class="s">'highway-mpg'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">five_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"five best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="c"># Use the best 6 features to train and test a multivariate k-nearest neighbors model using the default `k` value</span>
+<span class="n">six_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span> <span class="p">,</span> <span class="s">'city-mpg'</span> <span class="p">,</span> <span class="s">'highway-mpg'</span><span class="p">,</span> <span class="s">'length'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">six_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"six best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="c"># Display all of the RMSE values</span>
+<span class="n">k_rmse_results</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="err">'five</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="err">{5:</span><span class="w"> </span><span class="err">3346.6737097607775</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'four</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="p">{</span><span class="err">5:</span><span class="w"> </span><span class="err">3232.1036292326721</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'six</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="p">{</span><span class="err">5:</span><span class="w"> </span><span class="err">3398.1290113563641</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'three</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="p">{</span><span class="err">5:</span><span class="w"> </span><span class="err">3212.5596306057919</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'two</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="p">{</span><span class="err">5:</span><span class="w"> </span><span class="err">3681.3980922556266</span><span class="p">}</span><span class="err">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<h1 id="5-hyperparameter-tuning">5. Hyperparameter Tuning</h1>
+
+<p>We will now optimize the top three models that performed the best, varying the hyperparameter value from <code class="highlighter-rouge">1</code> to <code class="highlighter-rouge">25</code>.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="nf">knn_train_test</span><span class="p">(</span><span class="n">train_cols</span><span class="p">,</span> <span class="n">target_col</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c"># Randomize order of rows in DataFrame</span>
+    <span class="n">shuffled_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">rand_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">shuffled_index</span><span class="p">)</span>
+
+    <span class="c"># Divide number of rows in half and round</span>
+    <span class="n">last_train_row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rand_df</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c"># Select the first half and set as training set</span>
+    <span class="n">train_df</span> <span class="o">=</span> <span class="n">rand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">last_train_row</span><span class="p">]</span>
+    <span class="c"># Select the second half and set as test set</span>
+    <span class="n">test_df</span> <span class="o">=</span> <span class="n">rand_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">last_train_row</span><span class="p">:]</span>
+    
+    <span class="n">k_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">25</span><span class="p">)]</span>
+    <span class="n">k_rmses</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_values</span><span class="p">:</span>
+        <span class="c"># Fit model using k nearest neighbors</span>
+        <span class="n">knn</span> <span class="o">=</span> <span class="n">KNeighborsRegressor</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">knn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_df</span><span class="p">[</span><span class="n">train_cols</span><span class="p">],</span> <span class="n">train_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">])</span>
+
+        <span class="c"># Make predictions using model</span>
+        <span class="n">predicted_labels</span> <span class="o">=</span> <span class="n">knn</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_df</span><span class="p">[</span><span class="n">train_cols</span><span class="p">])</span>
+
+        <span class="c"># Calculate and return RMSE</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">test_df</span><span class="p">[</span><span class="n">target_col</span><span class="p">],</span> <span class="n">predicted_labels</span><span class="p">)</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mse</span><span class="p">)</span>
+        
+        <span class="n">k_rmses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse</span>
+    <span class="k">return</span> <span class="n">k_rmses</span>
+
+<span class="n">k_rmse_results</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">three_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">three_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"three best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="n">four_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span><span class="p">,</span> <span class="s">'city-mpg'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">four_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"four best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="n">five_best_features</span> <span class="o">=</span> <span class="p">[</span><span class="s">'horsepower'</span><span class="p">,</span> <span class="s">'width'</span><span class="p">,</span> <span class="s">'curb-weight'</span> <span class="p">,</span> <span class="s">'city-mpg'</span> <span class="p">,</span> <span class="s">'highway-mpg'</span><span class="p">]</span>
+<span class="n">rmse_val</span> <span class="o">=</span> <span class="n">knn_train_test</span><span class="p">(</span><span class="n">five_best_features</span><span class="p">,</span> <span class="s">'price'</span><span class="p">,</span> <span class="n">numeric_cars</span><span class="p">)</span>
+<span class="n">k_rmse_results</span><span class="p">[</span><span class="s">"five best features"</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_val</span>
+
+<span class="n">k_rmse_results</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="p">{</span><span class="err">'five</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="err">{1:</span><span class="w"> </span><span class="err">2561.7319037195625,</span><span class="w">
+  </span><span class="err">2:</span><span class="w"> </span><span class="err">2567.2749455482176,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">2949.9007889192553,</span><span class="w">
+  </span><span class="err">4:</span><span class="w"> </span><span class="err">3074.6091106298891,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">3346.6737097607775,</span><span class="w">
+  </span><span class="err">6:</span><span class="w"> </span><span class="err">3686.4646211770864,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">3907.1959982578019,</span><span class="w">
+  </span><span class="err">8:</span><span class="w"> </span><span class="err">4104.0339873177718,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4335.7141974258602,</span><span class="w">
+  </span><span class="err">10:</span><span class="w"> </span><span class="err">4463.6007084810435,</span><span class="w">
+  </span><span class="err">11:</span><span class="w"> </span><span class="err">4444.0259889090448,</span><span class="w">
+  </span><span class="err">12:</span><span class="w"> </span><span class="err">4534.547516044051,</span><span class="w">
+  </span><span class="err">13:</span><span class="w"> </span><span class="err">4638.5257014541967,</span><span class="w">
+  </span><span class="err">14:</span><span class="w"> </span><span class="err">4686.7680627393893,</span><span class="w">
+  </span><span class="err">15:</span><span class="w"> </span><span class="err">4676.6172318274348,</span><span class="w">
+  </span><span class="err">16:</span><span class="w"> </span><span class="err">4706.4889916373404,</span><span class="w">
+  </span><span class="err">17:</span><span class="w"> </span><span class="err">4714.757468354599,</span><span class="w">
+  </span><span class="err">18:</span><span class="w"> </span><span class="err">4724.0179262108768,</span><span class="w">
+  </span><span class="err">19:</span><span class="w"> </span><span class="err">4780.0364569672583,</span><span class="w">
+  </span><span class="err">20:</span><span class="w"> </span><span class="err">4790.8654014852591,</span><span class="w">
+  </span><span class="err">21:</span><span class="w"> </span><span class="err">4788.4429142051176,</span><span class="w">
+  </span><span class="err">22:</span><span class="w"> </span><span class="err">4820.2560355653704,</span><span class="w">
+  </span><span class="err">23:</span><span class="w"> </span><span class="err">4823.6246116515467,</span><span class="w">
+  </span><span class="err">24:</span><span class="w"> </span><span class="err">4830.7715122893824</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'four</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">3135.5489073677436,</span><span class="w">
+  </span><span class="err">2:</span><span class="w"> </span><span class="err">2514.1812009849527,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">2788.5519417420178,</span><span class="w">
+  </span><span class="err">4:</span><span class="w"> </span><span class="err">2917.4679936225316,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">3232.1036292326721,</span><span class="w">
+  </span><span class="err">6:</span><span class="w"> </span><span class="err">3566.725419074407,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">3834.9804809872821,</span><span class="w">
+  </span><span class="err">8:</span><span class="w"> </span><span class="err">3927.3952487590609,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4078.9765839753827,</span><span class="w">
+  </span><span class="err">10:</span><span class="w"> </span><span class="err">4199.8376270003955,</span><span class="w">
+  </span><span class="err">11:</span><span class="w"> </span><span class="err">4345.0069904611819,</span><span class="w">
+  </span><span class="err">12:</span><span class="w"> </span><span class="err">4451.3870113027624,</span><span class="w">
+  </span><span class="err">13:</span><span class="w"> </span><span class="err">4550.1634683008278,</span><span class="w">
+  </span><span class="err">14:</span><span class="w"> </span><span class="err">4591.5340160428832,</span><span class="w">
+  </span><span class="err">15:</span><span class="w"> </span><span class="err">4630.3996426828098,</span><span class="w">
+  </span><span class="err">16:</span><span class="w"> </span><span class="err">4711.9117982858279,</span><span class="w">
+  </span><span class="err">17:</span><span class="w"> </span><span class="err">4692.3372730081592,</span><span class="w">
+  </span><span class="err">18:</span><span class="w"> </span><span class="err">4709.1872236435829,</span><span class="w">
+  </span><span class="err">19:</span><span class="w"> </span><span class="err">4698.1962740829795,</span><span class="w">
+  </span><span class="err">20:</span><span class="w"> </span><span class="err">4738.5487814580347,</span><span class="w">
+  </span><span class="err">21:</span><span class="w"> </span><span class="err">4727.3518464816807,</span><span class="w">
+  </span><span class="err">22:</span><span class="w"> </span><span class="err">4719.3369599341022,</span><span class="w">
+  </span><span class="err">23:</span><span class="w"> </span><span class="err">4707.9563401268824,</span><span class="w">
+  </span><span class="err">24:</span><span class="w"> </span><span class="err">4753.4193738950999</span><span class="p">}</span><span class="err">,</span><span class="w">
+ </span><span class="err">'three</span><span class="w"> </span><span class="err">best</span><span class="w"> </span><span class="err">features':</span><span class="w"> </span><span class="p">{</span><span class="err">1:</span><span class="w"> </span><span class="err">3308.7499419294022,</span><span class="w">
+  </span><span class="err">2:</span><span class="w"> </span><span class="err">3044.812909435545,</span><span class="w">
+  </span><span class="err">3:</span><span class="w"> </span><span class="err">3042.2117028741623,</span><span class="w">
+  </span><span class="err">4:</span><span class="w"> </span><span class="err">2958.964739955848,</span><span class="w">
+  </span><span class="err">5:</span><span class="w"> </span><span class="err">3212.5596306057919,</span><span class="w">
+  </span><span class="err">6:</span><span class="w"> </span><span class="err">3542.3007736748041,</span><span class="w">
+  </span><span class="err">7:</span><span class="w"> </span><span class="err">3801.5597829031262,</span><span class="w">
+  </span><span class="err">8:</span><span class="w"> </span><span class="err">4007.7501484785639,</span><span class="w">
+  </span><span class="err">9:</span><span class="w"> </span><span class="err">4074.3452185932656,</span><span class="w">
+  </span><span class="err">10:</span><span class="w"> </span><span class="err">4225.0494506919176,</span><span class="w">
+  </span><span class="err">11:</span><span class="w"> </span><span class="err">4338.8991649386644,</span><span class="w">
+  </span><span class="err">12:</span><span class="w"> </span><span class="err">4428.0841388589351,</span><span class="w">
+  </span><span class="err">13:</span><span class="w"> </span><span class="err">4496.3621365502913,</span><span class="w">
+  </span><span class="err">14:</span><span class="w"> </span><span class="err">4540.1357252028592,</span><span class="w">
+  </span><span class="err">15:</span><span class="w"> </span><span class="err">4614.0272979737174,</span><span class="w">
+  </span><span class="err">16:</span><span class="w"> </span><span class="err">4654.474275823789,</span><span class="w">
+  </span><span class="err">17:</span><span class="w"> </span><span class="err">4714.0580949648638,</span><span class="w">
+  </span><span class="err">18:</span><span class="w"> </span><span class="err">4645.9886513064885,</span><span class="w">
+  </span><span class="err">19:</span><span class="w"> </span><span class="err">4628.211244787356,</span><span class="w">
+  </span><span class="err">20:</span><span class="w"> </span><span class="err">4665.0992005704829,</span><span class="w">
+  </span><span class="err">21:</span><span class="w"> </span><span class="err">4648.5009310888045,</span><span class="w">
+  </span><span class="err">22:</span><span class="w"> </span><span class="err">4610.0134050293573,</span><span class="w">
+  </span><span class="err">23:</span><span class="w"> </span><span class="err">4642.8367354686252,</span><span class="w">
+  </span><span class="err">24:</span><span class="w"> </span><span class="err">4669.5676777327653</span><span class="p">}</span><span class="err">}</span><span class="w">
+</span></code></pre>
+</div>
+
+<p>Let’s plot the resulting RMSE values:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">k_rmse_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">'k value'</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">'RMSE'</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p><img src="/assets/media/car-prices/CarPrices_37_0.png" alt="png" /></p>
+
+<h1 id="6-recommendations">6. Recommendations</h1>
+
+<ul>
+  <li>Modify the <code class="highlighter-rouge">knn_train_test()</code> function to use k-fold cross validation instead of test/train validation</li>
+  <li>Modify the <code class="highlighter-rouge">knn_train_test()</code> function to perform the data cleaning as well</li>
+</ul>
+
+    </article>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="http://localhost:4000/assets/js/validator.js"></script>
+<script src="/assets/js/app.js"></script>
+
+    </section>
+  </body>
+</html>

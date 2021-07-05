@@ -1,0 +1,53 @@
+/* 
+======================================================================
+>>> POST CSS
+======================================================================
+*/
+#post > p:nth-child(1) {
+    display: none;
+}
+
+* {
+    box-sizing: border-box;
+  }
+  html {
+    font-family: helvetica;
+  }
+  
+  html, body {
+    max-width: 100vw;
+  }
+  
+  table {
+   /* margin: auto; */
+    border-collapse: collapse;
+    overflow-x: auto;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+  }
+  
+  td, th {
+    padding: .5rem;
+  }
+  
+  th {
+    text-align: left;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border: none;
+    white-space: nowrap;
+  }
+  
+  td {
+    white-space: nowrap;
+    border: none;
+  }
+  
+  td:first-of-type, th:first-of-type {
+    border-left: none;
+  }
+  
+  td:last-of-type, th:last-of-type {
+    border-right: none;
+  }

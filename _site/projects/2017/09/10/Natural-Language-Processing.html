@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/BlogPosting" >
+  <link rel="stylesheet" type="text/css" href="/assets/css/screen.css">
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Source+Code+Pro">
+  <link rel="stylesheet" type="text/css" href="/assets/css/custom.css" />
+  <link rel="stylesheet" type="text/css" href="/assets/css/grid.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/jupyter.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/notebook.css">
+  <body>
+    <section class="post">
+
+    <article role="article" id="post" class="post-content" itemprop="articleBody">
+    <p>Analyzing stories from Hacker News using Natural Language Processing (NLP).</p>
+
+<!--end-->
+
+<h1 id="hacker-news-natural-language-processing">Hacker News: Natural Language Processing</h1>
+
+<p><strong>Analyzing stories from Hacker News using Natural Language Processing (NLP).</strong></p>
+
+<p>Natural Language Processing (NLP) is the study of enabling computers to understand human languages. This field may involve teaching computers to automatically score essays, infer grammatical rules, or determine the emotions associated with text.</p>
+
+<p>In this project we will be analyzing stories from Hacker News using NLP. We will be predicting the number of upvotes the articles received, based on their headlines. Because upvotes are an indicator of popularity, we’ll discover which types of articles tend to be the most popular.</p>
+
+<h1 id="1-about-hacker-news">1. About Hacker News</h1>
+
+<p><a href="https://news.ycombinator.com/">Hacker News</a> is a community where users can submit articles, and other users can upvote those articles. The articles with the most upvotes make it to the front page, where they’re more visible to the community.</p>
+
+<h1 id="2-the-data">2. The Data</h1>
+
+<p>Our data set was collected using the Hacker News API to scrape the data and consists of submissions users made to Hacker News from 2006 to 2015.</p>
+
+<p><code class="highlighter-rouge">3000</code> rows have been sampled from the data randomly, and all of the unnecessary columns have been removed. Our data now only has four columns:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Columns</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>submission_time</strong></td>
+      <td style="text-align: left">When the article was submitted</td>
+    </tr>
+    <tr>
+      <td><strong>upvotes</strong></td>
+      <td style="text-align: left">The number of upvotes the article received</td>
+    </tr>
+    <tr>
+      <td><strong>url</strong></td>
+      <td style="text-align: left">The base URL of the article</td>
+    </tr>
+    <tr>
+      <td><strong>headlines</strong></td>
+      <td style="text-align: left">The article’s headline</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="n">submissions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s">"sel_hn_stories.csv"</span><span class="p">)</span>
+
+<span class="n">submissions</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s">"submission_time"</span><span class="p">,</span> <span class="s">"upvotes"</span><span class="p">,</span> <span class="s">"url"</span><span class="p">,</span> <span class="s">"headline"</span><span class="p">]</span>
+<span class="n">submissions</span> <span class="o">=</span> <span class="n">submissions</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+<span class="n">submissions</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre>
+</div>
+
+<div>
+<style>
+    .dataframe thead tr:only-child th {
+        text-align: right;
+    }
+
+    .dataframe thead th {
+        text-align: left;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>submission_time</th>
+      <th>upvotes</th>
+      <th>url</th>
+      <th>headline</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2010-02-17T16:57:59Z</td>
+      <td>1</td>
+      <td>blog.jonasbandi.net</td>
+      <td>Software: Sadly we did adopt from the construc...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2014-02-04T02:36:30Z</td>
+      <td>1</td>
+      <td>blogs.wsj.com</td>
+      <td>Google’s Stock Split Means More Control for L...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2011-10-26T07:11:29Z</td>
+      <td>1</td>
+      <td>threatpost.com</td>
+      <td>SSL DOS attack tool released exploiting negoti...</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2011-04-03T15:43:44Z</td>
+      <td>67</td>
+      <td>algorithm.com.au</td>
+      <td>Immutability and Blocks Lambdas and Closures</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2013-01-13T16:49:20Z</td>
+      <td>1</td>
+      <td>winmacsofts.com</td>
+      <td>Comment optimiser la vitesse de Wordpress?</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h1 id="3-tokenizing-headlines">3. Tokenizing Headlines</h1>
+<p>Our goal is to train a linear regression algorithm that predicts the number of upvotes a headline would receive. To do this, we will need to convert each headline into a numerical representation and will utilize the <code class="highlighter-rouge">bag of words</code> model. A <a href="https://en.wikipedia.org/wiki/Bag-of-words_model">bag of words model</a> represents each piece of text as a numerical vector.</p>
+
+<p>The first step in creating a bag of words model is <a href="https://en.wikipedia.org/wiki/Tokenization">tokenization</a>. In tokenization, all we are doing is splitting each sentence into a list of individual words, or tokens. The split occurs on the space character (<code class="highlighter-rouge">" "</code>).</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">tokenized_headlines</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">submissions</span><span class="p">[</span><span class="s">"headline"</span><span class="p">]:</span>
+    <span class="n">tokenized_headlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">" "</span><span class="p">))</span>
+</code></pre>
+</div>
+
+<h1 id="4-preprocessing-tokens-to-increase-accuracy">4. Preprocessing Tokens to Increase Accuracy</h1>
+
+<p>We will process our tokens to make our predictions more accurate. We will need to convert variations of the same word, for example: <code class="highlighter-rouge">China</code>, <code class="highlighter-rouge">China.</code>, <code class="highlighter-rouge">china</code>, so that they’re consistent.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">clean_tokenized</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">punctuation</span> <span class="o">=</span> <span class="p">[</span><span class="s">","</span><span class="p">,</span> <span class="s">":"</span><span class="p">,</span> <span class="s">";"</span><span class="p">,</span> <span class="s">"."</span><span class="p">,</span> <span class="s">"'"</span><span class="p">,</span> <span class="s">'"'</span><span class="p">,</span> <span class="s">"’"</span><span class="p">,</span> <span class="s">"?"</span><span class="p">,</span> <span class="s">"/"</span><span class="p">,</span> <span class="s">"-"</span><span class="p">,</span> <span class="s">"+"</span><span class="p">,</span> <span class="s">"&amp;"</span><span class="p">,</span> <span class="s">"("</span><span class="p">,</span> <span class="s">")"</span><span class="p">]</span>
+<span class="c"># Loop through each item in tokenized_headlines, which is a list of lists</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">tokenized_headlines</span><span class="p">:</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+        <span class="c"># Convert each individual token to lowercase</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="c"># Remove all of the items in the punctuation list from each individual token</span>
+        <span class="k">for</span> <span class="n">punc</span> <span class="ow">in</span> <span class="n">punctuation</span><span class="p">:</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">punc</span><span class="p">,</span> <span class="s">""</span><span class="p">)</span>
+        <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+    <span class="c"># Append the clean list to clean_tokenized</span>
+    <span class="n">clean_tokenized</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p><code class="highlighter-rouge">Clean_tokenized</code> should now be a list of lists. Each list should contain the preprocessed tokens associated with the <code class="highlighter-rouge">headline</code> in the corresponding position of the <code class="highlighter-rouge">submissions</code> DataFrame.</p>
+
+<h1 id="5-assemble-a-matrix-of-unique-words">5. Assemble a Matrix of Unique Words</h1>
+<p>Now that we have our tokens, we can begin converting the sentences to their numerical representations.</p>
+
+<p>First, we’ll retrieve all of the unique words from all of the headlines. Then, we’ll create a matrix, and assign those words as the column headers. We’ll initialize all of the values in the matrix to <code class="highlighter-rouge">0</code>.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">unique_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">single_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">tokens</span> <span class="ow">in</span> <span class="n">clean_tokenized</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">token</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">single_tokens</span><span class="p">:</span>
+            <span class="n">single_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">single_tokens</span> <span class="ow">and</span> <span class="n">token</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unique_tokens</span><span class="p">:</span>
+            <span class="n">unique_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clean_tokenized</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="n">unique_tokens</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h1 id="6-counting-token-occurances">6. Counting Token Occurances</h1>
+<p>Now that we have a matrix where all our values are <code class="highlighter-rouge">0</code>, we need to fill in the correct counts for each cell. This involves going through each set of tokens, and incrementing the column counters in the appropriate row.</p>
+
+<p>When we’re finished, we will have a row vector for each headline that tells us how many times each token occured in that headline.</p>
+
+<p>To accomplish this, we can loop through each list of tokens in <code class="highlighter-rouge">clean_tokenized</code>, then loop through each token in the list and increment the proper cell.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># We've already loaded in clean_tokenized and counts</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">clean_tokenized</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">unique_tokens</span><span class="p">:</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">token</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+</code></pre>
+</div>
+
+<h1 id="7-removing-columns-to-increase-accuracy">7. Removing Columns to Increase Accuracy</h1>
+<p>We have over <code class="highlighter-rouge">2000</code> columns in our matrix. This can make it very hard for a linear regression model to make good predictions. Too many columns will cause the model to fit to noise instead of the signal in the data.</p>
+
+<p>There are two kinds of features that will reduce prediction accuracy.</p>
+
+<ol>
+  <li>
+    <p>Features that occur only a few times will cause overfitting, because the model doesn’t have enough information to accurately decide whether they’re important. These features will probably correlate differently with upvotes in the test set and the training set.</p>
+  </li>
+  <li>
+    <p>Features that occur too many times can also cause issues. These are words like <code class="highlighter-rouge">and</code> and <code class="highlighter-rouge">to</code>, which occur in nearly every headline. These words don’t add any information, because they don’t necessarily correlate with upvotes. These types of words are sometimes called <code class="highlighter-rouge">stopwords</code>.</p>
+  </li>
+</ol>
+
+<p>To reduce the number of features and enable the linear regression model to make better predictions, we’ll remove any words that occur fewer than <code class="highlighter-rouge">5</code> times or more than <code class="highlighter-rouge">100</code> times.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="c"># We've already loaded in clean_tokenized and counts</span>
+<span class="n">word_counts</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,(</span><span class="n">word_counts</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">word_counts</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">)]</span>
+</code></pre>
+</div>
+
+<h1 id="8-splitting-the-data-into-train-and-test-sets">8. Splitting the Data into Train and Test Sets</h1>
+<p>Now we need to split the data into two sets so that we can evaluate our algorithm effectively. We’ll train our algorithm on a training set, then test its performance on a test set.</p>
+
+<p>The <code class="highlighter-rouge">[train_test_split()</code> function from scikit-learn will help us accomplish this.</p>
+
+<p>We’ll pass in <code class="highlighter-rouge">.2</code> for the <code class="highlighter-rouge">test_size</code> parameter to randomly select <code class="highlighter-rouge">20%</code> of the rows for our test set, and <code class="highlighter-rouge">80%</code> for our training set.</p>
+
+<p><code class="highlighter-rouge">X_train</code> and <code class="highlighter-rouge">X_test</code> contain the predictors, and <code class="highlighter-rouge">y_train</code> and <code class="highlighter-rouge">y_test</code> contain the value we’re trying to predict (upvotes).</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">submissions</span><span class="p">[</span><span class="s">"upvotes"</span><span class="p">],</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h1 id="9-making-predictions">9. Making Predictions</h1>
+<p>Now that we have a training set and a test set, let’s train a model and make test predictions.</p>
+
+<p>First we’ll initialize the model using the <code class="highlighter-rouge">LinearRegression</code> class. Then, we’ll use the <code class="highlighter-rouge">fit()</code> method on the model to train with <code class="highlighter-rouge">X_train</code> and <code class="highlighter-rouge">y_train</code>. Finally, we’ll make predictions with <code class="highlighter-rouge">X_test</code></p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s">"ignore"</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s">"scipy"</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s">"^internal gelsd"</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>When we make predictions with a linear regression model, the model assigns coefficients to each column. Essentially, the model is determining which words correlate with more upvotes, and which with less.</p>
+
+<p>By finding these correlations, the model will be able to predict which headlines will be highly upvoted in the future. While the algorithm won’t have a high level of understanding of the text, linear regression can generate surprisingly good results.</p>
+
+<h1 id="10-calculating-prediction-error">10. Calculating Prediction Error</h1>
+
+<p>Now that we have predictions, we can calculate our prediction error. We will use Mean Squared (MSE), which is a common error metric.</p>
+
+<p>With MSE, we subtract the predictions from the actual values, square the results, and find the mean. Because the errors are squared, MSE penalizes errors further away from the actual value more than those close to the actual value. We want to use MSE because we’d like all of our predictions to be relatively close to the actual values.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">mse</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">predictions</span> <span class="o">-</span> <span class="n">y_test</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+<span class="n">mse</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>2652.6082512522839
+</code></pre>
+</div>
+
+<p>Our MSE is <code class="highlighter-rouge">2652</code>, which is a fairly large value. There’s no hard and fast rule about what a “good” error rate is, because it depends on the problem we’re solving and our error tolerance.</p>
+
+<p>In this case, the mean number of upvotes is <code class="highlighter-rouge">10</code>, and the standard deviation is <code class="highlighter-rouge">39.5</code>. If we take the square root of our MSE to calculate error in terms of upvotes, we get <code class="highlighter-rouge">46.7</code>. This means that our average error is <code class="highlighter-rouge">46.7</code> upvotes away from the true value. This is higher than the standard deviation, so our predictions are often far off-base.</p>
+
+<h1 id="11-recommendations">11. Recommendations</h1>
+
+<p>We can take several steps to reduce the error and explore natural language processing further:</p>
+
+<p><strong>1. Collect more data.</strong></p>
+<ul>
+  <li>There are many features in natural language processing. Using more data will ensure that the model will find more occurrences of the same features in the test and training sets, which will help the model make better predictions</li>
+</ul>
+
+<p><strong>2. Add “meta” features like headline length and average word length</strong></p>
+
+<p><strong>3. Use a random forest, or another more powerful machine learning technique</strong></p>
+
+<p><strong>4. Explore different thresholds for removing extraneous columns</strong></p>
+
+    </article>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="http://localhost:4000/assets/js/validator.js"></script>
+<script src="/assets/js/app.js"></script>
+
+    </section>
+  </body>
+</html>

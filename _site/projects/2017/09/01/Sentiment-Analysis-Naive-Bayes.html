@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/BlogPosting" >
+  <link rel="stylesheet" type="text/css" href="/assets/css/screen.css">
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Source+Code+Pro">
+  <link rel="stylesheet" type="text/css" href="/assets/css/custom.css" />
+  <link rel="stylesheet" type="text/css" href="/assets/css/grid.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/jupyter.css">
+  <link rel="stylesheet" type="text/css" href="/assets/css/notebook.css">
+  <body>
+    <section class="post">
+
+    <article role="article" id="post" class="post-content" itemprop="articleBody">
+    <p>Using Naive Bayes to Classify Movie Reviews Based on Sentiment.</p>
+
+<!--end-->
+
+<h1 id="sentiment-analysis-naive-bayes">Sentiment Analysis: Naive Bayes</h1>
+
+<p><strong>Using Naive Bayes to Classify Movie Reviews Based on Sentiment.</strong></p>
+
+<h1 id="1-movie-reviews">1. Movie Reviews</h1>
+
+<p>We will be working with a CSV file containing movie reviews. Each row contains the text of the review, as well as a number indicating whether the tone of the review is positive(<code class="highlighter-rouge">1</code>) or negative(<code class="highlighter-rouge">-1</code>).</p>
+
+<p>We want to predict whether a review is negative or positive, based on the text alone. To do this, we’ll train an algorithm using the reviews and classifications in <code class="highlighter-rouge">train.csv</code>, and then make predictions on the reviews in <code class="highlighter-rouge">test.csv</code>. We’ll be able to calculate our error using the actual classifications in <code class="highlighter-rouge">test.csv</code> to see how good our predictions were.</p>
+
+<p>We’ll use <a href="https://en.wikipedia.org/wiki/Naive_Bayes_classifier">Naive Bayes</a> for our classification algorithm. A Naive Bayes classifier works by figuring out how likely data attributes are to be associated with a certain class.</p>
+
+<p>Bayes’ theorem is stated mathematically as the following equation:</p>
+
+<script type="math/tex; mode=display">P(A \mid B) = \frac{P(B \mid A) \, P(A)}{P(B)}</script>
+
+<p>This equation states that: “the probability of A given that B is true equals the probability of B given that A is true times the probability of A being true, divided by the probability of B being true.”</p>
+
+<h1 id="2-finding-word-count">2. Finding Word Count</h1>
+
+<p>Our goal is to determine if we should classify a data row as negative or positive.</p>
+
+<p>We have to calculate the probabilities of each classification, and the probabilities of each feature falling into each classification. To do this we will need to generate features from one long strong by splitting the text up into words based on whitespace. Each word in a movie review will then be a feature that we can work with. We can then count up how many times each word occurs in the negative reviews, and how many times each word occurs in the positive reviews. Eventually, we will use the counts to compute the probability that a new review will belong to one class versus the other.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="c"># A Python class that lets us count how many times items occur in a list</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="c"># Read in the training data</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"train.csv"</span><span class="p">,</span> <span class="s">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="nb">file</span><span class="p">:</span>
+    <span class="n">reviews</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="nb">file</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">get_text</span><span class="p">(</span><span class="n">reviews</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
+    <span class="c"># Join together the text in the reviews for a particular tone</span>
+    <span class="c"># Convert the text to lowercase so the algorithm doesn't see "Not" and "not" as different words</span>
+    <span class="k">return</span> <span class="s">" "</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reviews</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">)])</span>
+
+<span class="k">def</span> <span class="nf">count_text</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="c"># Split text into words based on whitespace</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">"</span><span class="err">\</span><span class="s">s+"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="c"># Count up the occurrence of each word</span>
+    <span class="k">return</span> <span class="n">Counter</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+<span class="n">negative_text</span> <span class="o">=</span> <span class="n">get_text</span><span class="p">(</span><span class="n">reviews</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">positive_text</span> <span class="o">=</span> <span class="n">get_text</span><span class="p">(</span><span class="n">reviews</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c"># Generate word counts for negative tone</span>
+<span class="n">negative_counts</span> <span class="o">=</span> <span class="n">count_text</span><span class="p">(</span><span class="n">negative_text</span><span class="p">)</span>
+<span class="c"># Generate word counts for positive tone</span>
+<span class="n">positive_counts</span> <span class="o">=</span> <span class="n">count_text</span><span class="p">(</span><span class="n">positive_text</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">"Negative text sample: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">negative_text</span><span class="p">[:</span><span class="mi">100</span><span class="p">]))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Positive text sample: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">positive_text</span><span class="p">[:</span><span class="mi">100</span><span class="p">]))</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Negative text sample: plot : two teen couples go to a church party drink and then drive . they get into an accident . one 
+Positive text sample: films adapted from comic books have had plenty of success whether they're about superheroes ( batman
+</code></pre>
+</div>
+
+<h1 id="3-naive-bayes-the-python-way">3. Naive Bayes: The Python Way</h1>
+
+<h3 id="31-making-predictions-about-review-classifications">3.1 Making Predictions About Review Classifications</h3>
+<p>Now that we have the word counts, we just need to convert them to probabilities and multiply them out to predict the classifications.</p>
+
+<p>Let’s say we wanted to find the probability that the review <code class="highlighter-rouge">didn't like it</code> expresses a negative sentiment. We would find the total number of times the word <code class="highlighter-rouge">didn't</code> occurred in the negative reviews, and divide it by the total number of words in the negative reviews to get the probability of <code class="highlighter-rouge">x</code> given <code class="highlighter-rouge">y</code>. We would then do the same for <code class="highlighter-rouge">like</code> and <code class="highlighter-rouge">it</code>. We would multiply all three probabilities, and then multiply by the probability of any document expressing a negative sentiment to get our final probability that the sentence expresses negative sentiment.</p>
+
+<p>We would do the same for positive sentiment. Then, whichever probability is greater would be the class that the algorithm assigns the review to.</p>
+
+<p>To accomplish all of this, we’ll need to determine the probabilities of each class occurring in the data, and then make a function that determines the classification:</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+
+<span class="k">def</span> <span class="nf">get_y_count</span><span class="p">(</span><span class="n">score</span><span class="p">):</span>
+    <span class="c"># Determine the count of each classification occurring in the data</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reviews</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">score</span><span class="p">)])</span>
+
+<span class="c"># We will use these counts for smoothing when computing the prediction</span>
+<span class="n">positive_review_count</span> <span class="o">=</span> <span class="n">get_y_count</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">negative_review_count</span> <span class="o">=</span> <span class="n">get_y_count</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c"># These are the class probabilities</span>
+<span class="n">prob_positive</span> <span class="o">=</span> <span class="n">positive_review_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">reviews</span><span class="p">)</span>
+<span class="n">prob_negative</span> <span class="o">=</span> <span class="n">negative_review_count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">reviews</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_class_prediction</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">class_prob</span><span class="p">,</span> <span class="n">class_count</span><span class="p">):</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">text_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">"</span><span class="err">\</span><span class="s">s+"</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">text_counts</span><span class="p">:</span>
+        <span class="c"># For every word in the text, we get the number of times that word occurred in the reviews for a given class, add 1 to smooth the value, and divide by the total number of words in the class (plus the class_count, also to smooth the denominator)</span>
+        <span class="c"># Smoothing ensures that we don't multiply the prediction by 0 if the word didn't exist in the training data</span>
+        <span class="c"># We also smooth the denominator counts to keep things even</span>
+        <span class="n">prediction</span> <span class="o">*=</span>  <span class="n">text_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">+</span> <span class="n">class_count</span><span class="p">))</span>
+    <span class="c"># Now we multiply by the probability of the class existing in the documents</span>
+    <span class="k">return</span> <span class="n">prediction</span> <span class="o">*</span> <span class="n">class_prob</span>
+
+<span class="c"># Now we can generate probabilities for the classes our reviews belong to</span>
+<span class="c"># The probabilities themselves aren't very useful, we make our classification decision based on which value is greater</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Review: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reviews</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Negative prediction: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">make_class_prediction</span><span class="p">(</span><span class="n">reviews</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">negative_counts</span><span class="p">,</span> <span class="n">prob_negative</span><span class="p">,</span> <span class="n">negative_review_count</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Positive prediction: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">make_class_prediction</span><span class="p">(</span><span class="n">reviews</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">positive_counts</span><span class="p">,</span> <span class="n">prob_positive</span><span class="p">,</span> <span class="n">positive_review_count</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Review: plot : two teen couples go to a church party drink and then drive . they get into an accident . one of the guys dies but his girlfriend continues to see him in her life and has nightmares . what's the deal ? watch the movie and " sorta " find out . . . critique : a mind-fuck movie for the teen generation that touches on a very cool idea but presents it in a very bad package . which is what makes this review an even harder one to write since i generally applaud films which attempt
+Negative prediction: 3.005053036235652e-221
+Positive prediction: 1.307170546690679e-226
+</code></pre>
+</div>
+
+<h3 id="32-predicting-the-test-set">3.2 Predicting the Test Set</h3>
+<p>Now that we can make predictions, let’s predict the probabilities for the reviews in <code class="highlighter-rouge">test.csv</code>.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">csv</span>
+
+<span class="k">def</span> <span class="nf">make_decision</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">make_class_prediction</span><span class="p">):</span>
+    <span class="c"># Compute the negative and positive probabilities</span>
+    <span class="n">negative_prediction</span> <span class="o">=</span> <span class="n">make_class_prediction</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">negative_counts</span><span class="p">,</span> <span class="n">prob_negative</span><span class="p">,</span> <span class="n">negative_review_count</span><span class="p">)</span>
+    <span class="n">positive_prediction</span> <span class="o">=</span> <span class="n">make_class_prediction</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">positive_counts</span><span class="p">,</span> <span class="n">prob_positive</span><span class="p">,</span> <span class="n">positive_review_count</span><span class="p">)</span>
+
+    <span class="c"># We assign a classification based on which probability is greater</span>
+    <span class="k">if</span> <span class="n">negative_prediction</span> <span class="o">&gt;</span> <span class="n">positive_prediction</span><span class="p">:</span>
+      <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">"test.csv"</span><span class="p">,</span> <span class="s">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="nb">file</span><span class="p">:</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="nb">file</span><span class="p">))</span>
+
+<span class="n">predictions</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_decision</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">make_class_prediction</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">test</span><span class="p">]</span>
+</code></pre>
+</div>
+
+<h3 id="33-computing-prediction-error">3.3 Computing Prediction Error</h3>
+
+<p>Now that we know the predictions, we’ll compute error using the area under the <code class="highlighter-rouge">ROC</code> curve. This will tell us how “good” the model is; closer to 1 means that the model is better.</p>
+
+<p>Computing error is a very important measure of whether your model is “good,” and when it’s getting better or worse.</p>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="n">actual</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">test</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+
+<span class="c"># Generate the ROC curve using scikits-learn</span>
+<span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">roc_curve</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c"># Measure the area under the curve</span>
+<span class="c"># The closer to 1 it is, the "better" the predictions</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"AUC of the predictions: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>AUC of the predictions: 0.680701754385965
+</code></pre>
+</div>
+
+<p>There are a lot of extensions we could add to this algorithm to make it perform better. We could look at <code class="highlighter-rouge">n-grams</code> instead of unigrams, for example. We could also remove punctuation and other non-characters. We could remove <code class="highlighter-rouge">stopwords</code>, or perform <code class="highlighter-rouge">stemming</code> or lemmatization.</p>
+
+<h1 id="4-naive-bayes-the-scikit-learn-way">4. Naive Bayes: The Scikit-Learn Way</h1>
+
+<div class="language-python highlighter-rouge"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">sklearn.naive_bayes</span> <span class="kn">import</span> <span class="n">MultinomialNB</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
+<span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">metrics</span>
+
+<span class="c"># Generate counts from text using a vectorizer  </span>
+<span class="c"># We can choose from other available vectorizers, and set many different options</span>
+<span class="c"># This code performs our step of computing word counts</span>
+<span class="n">vectorizer</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">stop_words</span><span class="o">=</span><span class="s">'english'</span><span class="p">,</span> <span class="n">max_df</span><span class="o">=.</span><span class="mo">05</span><span class="p">)</span>
+<span class="n">train_features</span> <span class="o">=</span> <span class="n">vectorizer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">([</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reviews</span><span class="p">])</span>
+<span class="n">test_features</span> <span class="o">=</span> <span class="n">vectorizer</span><span class="o">.</span><span class="n">transform</span><span class="p">([</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">test</span><span class="p">])</span>
+
+<span class="c"># Fit a Naive Bayes model to the training data</span>
+<span class="c"># This will train the model using the word counts we computed and the existing classifications in the training set</span>
+<span class="n">nb</span> <span class="o">=</span> <span class="n">MultinomialNB</span><span class="p">()</span>
+<span class="n">nb</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_features</span><span class="p">,</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reviews</span><span class="p">])</span>
+
+<span class="c"># Now we can use the model to predict classifications for our test features</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_features</span><span class="p">)</span>
+
+<span class="c"># Compute the error</span>
+<span class="c"># It's slightly different from our model because the internals of this process work differently from our implementation</span>
+<span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">,</span> <span class="n">thresholds</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">roc_curve</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">pos_label</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"Multinomal naive bayes AUC: {0}"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">auc</span><span class="p">(</span><span class="n">fpr</span><span class="p">,</span> <span class="n">tpr</span><span class="p">)))</span>
+</code></pre>
+</div>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Multinomal naive bayes AUC: 0.635500515995872
+</code></pre>
+</div>
+
+    </article>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="http://localhost:4000/assets/js/validator.js"></script>
+<script src="/assets/js/app.js"></script>
+
+    </section>
+  </body>
+</html>

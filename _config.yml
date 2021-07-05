@@ -1,0 +1,93 @@
+# Site Settings
+title: #
+title_seperator: "|"
+description: #
+logo: #
+
+locale: "en_US"
+url: "https://apasciuto.github.io"
+permalink: /:categories/:year/:month/:day/:title 
+# paginate: 10 # amount of posts to show
+# paginate_path: /page:num/
+
+# Social Media
+social:
+  - title: # facebook
+    url: #
+  - title: # instagram
+    url: #
+  - title: # twitter
+    url: # http://twitter.com/
+  - title: # google-plus
+    url: #
+  - title: # youtube
+    url: #
+  - title: #linkedin
+    url: #
+  - title: # github
+    url: # http://github.com/
+
+# SEO Related
+google_site_verification: # Google webmaster tools
+bing_site_verification: # https://ssl.bing.com/webmaster/configure/verify/ownership Option 2 content= goes here
+alexa_site_verification: #
+yandex_site_verification: #
+
+# Analytics
+analytics: #
+  provider: # false # false (default), "google", "google-universal", "custom"
+  google: #
+    tracking_id: #
+
+# Build Settings
+markdown: kramdown
+# highlighter: rouge
+# gems:
+#   - jekyll-feed
+#   - jekyll-redirect-from
+#   - jekyll-seo-tag
+#   - jekyll-sitemap
+
+# Markdown Processors
+# kramdown:
+#   auto_ids: true
+#   entity_output: as_char
+#   toc_levels: 1..6
+#   smart_quotes: lsquo,rsquo,ldquo,rdquo
+#   input: GFM
+#   hard_wrap: false
+#   footnote_nr: 1
+
+# Site Author
+author:
+  avatar: #
+  name: #
+  email: #
+
+include:
+  - .htaccess
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - "*.less"
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - CHANGELOG
+  - Capfile
+  - Gemfile
+  - Gruntfile.js
+  - LICENSE
+  - README
+  - Rakefile
+  - config
+  - gulpfile.js
+  - lib
+  - log
+  - node_modules
+  - package.json
+  - spec
+  - tmp
